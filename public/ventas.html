@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimarket App - Ventas</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Buscar Productos y Realizar Ventas</h1>
+        <form id="searchForm" class="form-inline my-4">
+            <input type="number" id="productId" class="form-control mr-2" placeholder="ID del Producto" required>
+            <button type="submit" class="btn btn-primary">Buscar Producto</button>
+        </form>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Marca</th>
+                    <th>Precio de Venta</th>
+                    <th>Cantidad</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="productTableBody">
+                <!-- Productos agregados aparecerán aquí -->
+            </tbody>
+        </table>
+        <h3>Total: $<span id="totalAmount">0.00</span></h3>
+
+        <div class="form-group">
+            <label>Método de Pago:</label><br>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="credito" value="credito">
+                <label class="form-check-label" for="credito">
+                    <i class="fas fa-credit-card"></i> Tarjeta de Crédito
+                </label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="debito" value="debito">
+                <label class="form-check-label" for="debito">
+                    <i class="fas fa-credit-card-front"></i> Tarjeta de Débito
+                </label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="efectivo" value="efectivo">
+                <label class="form-check-label" for="efectivo">
+                    <i class="fas fa-money-bill-wave"></i> Efectivo
+                </label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="mercadopago" value="mercadopago">
+                <label class="form-check-label" for="mercadopago">
+                    <i class="fas fa-wallet"></i> MercadoPago
+                </label>
+            </div>
+        </div>
+
+        <button id="finalizeSale" class="btn btn-success">Finalizar Venta</button>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Venta Realizada</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    La venta se ha realizado exitosamente.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let totalAmount = 0;
+            const productTableBody = $('#productTableBody');
+
+            $('#searchForm').submit(function(event) {
+                event.preventDefault();
+                const productId = $('#productId').val();
+                $.get(`/products/${productId}`, function(product) {
+                    const productRow = `
+                        <tr>
+                            <td>${product.id}</td>
+                            <td>${product.name}</td>
+                            <td>${product.brand}</td>
+                            <td>${product.sale_price}</td>
+                            <td><input type="number" class="form-control quantity" data-id="${product.id}" data-price="${product.sale_price}" value="1" min="1"></td>
+                            <td><button class="btn btn-danger remove-product" data-id="${product.id}">Eliminar</button></td>
+                        </tr>`;
+                    productTableBody.append(productRow);
+                    totalAmount += product.sale_price;
+                    $('#totalAmount').text(totalAmount.toFixed(2));
+                });
+            });
+
+            productTableBody.on('click', '.remove-product', function() {
+                const row = $(this).closest('tr');
+                const price = row.find('.quantity').data('price');
+                const quantity = row.find('.quantity').val();
+                totalAmount -= price * quantity;
+                $('#totalAmount').text(totalAmount.toFixed(2));
+                row.remove();
+            });
+
+            productTableBody.on('change', '.quantity', function() {
+                const price = $(this).data('price');
+                const quantity = $(this).val();
+                totalAmount = 0;
+                productTableBody.find('tr').each(function() {
+                    const rowPrice = $(this).find('.quantity').data('price');
+                    const rowQuantity = $(this).find('.quantity').val();
+                    totalAmount += rowPrice * rowQuantity;
+                });
+                $('#totalAmount').text(totalAmount.toFixed(2));
+            });
+
+            $('#finalizeSale').click(function() {
+                const products = [];
+                productTableBody.find('tr').each(function() {
+                    const productId = $(this).find('.quantity').data('id');
+                    const quantity = $(this).find('.quantity').val();
+                    const price = $(this).find('.quantity').data('price');
+                    products.push({ id: productId, quantity: quantity, sale_price: price });
+                });
+
+                const paymentMethods = [];
+                if ($('#credito').is(':checked')) paymentMethods.push('credito');
+                if ($('#debito').is(':checked')) paymentMethods.push('debito');
+                if ($('#efectivo').is(':checked')) paymentMethods.push('efectivo');
+                if ($('#mercadopago').is(':checked')) paymentMethods.push('mercadopago');
+
+                $.ajax({
+                    url: '/finalize-sale',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ products: products, payment_methods: paymentMethods }),
+                    success: function(response) {
+                        if (response.success) {
+                            $('#successModal').modal('show');
+                            productTableBody.empty();
+                            totalAmount = 0;
+                            $('#totalAmount').text(totalAmount.toFixed(2));
+
+                            // Desmarcar los checkboxes
+                            $('#credito').prop('checked', false);
+                            $('#debito').prop('checked', false);
+                            $('#efectivo').prop('checked', false);
+                            $('#mercadopago').prop('checked', false);
+                        } else {
+                            console.error("Error en la respuesta del servidor:", response.error);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error en la petición AJAX:", error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <div class="container mt-4">
+        <!-- Contenido de la página de caja diaria -->
+
+        <!-- Resto del contenido de tu página -->
+    </div>
+
+    <!-- Enlaces a tus estilos CSS -->
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <!-- Inclusión de librerías de Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+     <!-- Navbar -->
+     <%- include('navbar') %>
+
+    <div class="container">
+        <!-- Contenido de la página de caja diaria -->
+        <h1>Caja Diaria</h1>
+        <form id="dailyCashForm">
+            <div class="form-group">
+                <label for="id">ID:</label>
+                <input type="text" class="form-control" id="id" name="id" readonly>
+            </div>
+            <div class="form-group">
+                <label for="motivo">Tipo de Operación:</label>
+                <select class="form-control" id="motivo" name="motivo">
+                    <option value="ingreso">Ingreso</option>
+                    <option value="egreso">Egreso</option>
+                </select>
+            </div>
+            <div class="form-group" id="saldoInicialOption" style="display: none;">
+                <label for="motivoIngreso">Motivo de Ingreso:</label>
+                <select class="form-control" id="motivoIngreso" name="motivo_ingreso">
+                    <option value="saldo_inicial">Saldo Inicial</option>
+                </select>
+            </div>
+            <div class="form-group" id="egresoOptions" style="display: none;">
+                <label for="motivoEgreso">Motivo de Egreso:</label>
+                <select class="form-control" id="motivoEgreso" name="motivo_egreso">
+                    <option value="pago_proveedores">Pago a Proveedores</option>
+                    <option value="pago_servicios">Pago de Servicios</option>
+                    <option value="mantenimiento">Pago por Mantenimiento</option>
+                    <option value="otros">Otros</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="descripcion">Descripción:</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="monto">Monto:</label>
+                <input type="number" class="form-control" id="monto" name="monto" step="0.01" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </form>
+
+        <div id="resumenCaja" class="card" style="position: fixed !important; top: 0 !important; right: 0 !important; width: 100% !important; max-width: 23% !important; z-index: 1000 !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; background-color: #f8f9fa !important; border-radius: 0 !important;">
+            <div class="card-body" style="padding: 0.5rem !important;">
+                <div class="d-flex justify-content-end align-items-center" style="flex-wrap: wrap !important;">
+                    <div style="background-color: black; padding: 0.5rem; border-radius: 5px;">
+                        <strong style="color: #39ff14; font-size: 28px;">Total en Caja:</strong>
+                        <span id="totalCaja" style="font-weight: bold !important; color: #39ff14 !important; font-size: 28px;">$&nbsp;0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+    
+
+        <!-- Tabla para mostrar registros -->
+        <div class="mt-4">
+            <h2>Registros de Caja Diaria</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha y Hora</th>
+                        <th>Motivo</th>
+                        <th>Descripción</th>
+                        <th>Monto</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Aquí se llenarán dinámicamente los registros -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Botón de Cierre de Caja -->
+        <button type="button" class="btn btn-danger mt-3" id="cierreCajaButton" style="position: fixed; bottom: 600px; right: 20px;">Cierre de Caja</button>
+
+    </div>
+
+    <!-- Modal de éxito -->
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Registro Exitoso</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    El registro de caja diaria se ha realizado correctamente.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inclusión de scripts JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Función para obtener la fecha y hora actual en formato ISO
+            function getCurrentDateTime() {
+                return new Date().toISOString().slice(0, 19).replace('T', ' ');
+            }
+    
+            // Rellenar el campo ID con un valor automático (puedes ajustarlo según tu lógica)
+            $('#id').val('ID_' + Date.now());
+    
+            // Mostrar u ocultar opciones según el tipo de operación seleccionado
+            $('#motivo').change(function() {
+                const motivo = $(this).val();
+                if (motivo === 'ingreso') {
+                    $('#saldoInicialOption').show();
+                    $('#egresoOptions').hide();
+                } else if (motivo === 'egreso') {
+                    $('#saldoInicialOption').hide();
+                    $('#egresoOptions').show();
+                }
+            });
+    
+            // Enviar formulario al hacer submit
+            $('#dailyCashForm').submit(function(event) {
+                event.preventDefault();
+                const id = $('#id').val();
+                const fecha_hora = getCurrentDateTime();
+                const motivo = $('#motivo').val();
+                const motivo_egreso = motivo === 'egreso' ? $('#motivoEgreso').val() : null;
+                const motivo_ingreso = motivo === 'ingreso' ? $('#motivoIngreso').val() : null;
+                const descripcion = $('#descripcion').val();
+                const monto = parseFloat($('#monto').val());
+    
+                const data = {
+                    id: id,
+                    fecha_hora: fecha_hora,
+                    motivo: motivo,
+                    motivo_egreso: motivo_egreso,
+                    motivo_ingreso: motivo_ingreso,
+                    descripcion: descripcion,
+                    monto: monto
+                };
+    
+                $.ajax({
+                    url: '/insert-daily-cash',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        if (response.success) {
+                            // Mostrar el modal de éxito
+                            $('#successModal').modal('show');
+                            // Limpiar el formulario después de enviar
+                            $('#dailyCashForm')[0].reset();
+                            // Actualizar la tabla de registros
+                            fetchDailyCashRecords();
+                        } else {
+                            alert('Hubo un error al procesar el registro de caja diaria.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error en la petición AJAX:', error);
+                        alert('Hubo un error en la petición AJAX al servidor.');
+                    }
+                });
+            });
+    
+            // Función para obtener y mostrar los registros de la tabla
+            function fetchDailyCashRecords() {
+                $.ajax({
+                    url: '/get-daily-cash-records',
+                    method: 'GET',
+                    success: function(response) {
+                        // Limpiar la tabla antes de actualizar
+                        $('#tableBody').empty();
+    
+                        // Llenar la tabla con los registros obtenidos
+                        if (response.success) {
+                            response.records.forEach(function(record) {
+                                const colorClass = record.motivo_egreso ? 'text-danger' : 'text-success';
+                                const row = `<tr class="${colorClass}">
+                                    <td>${record.id}</td>
+                                    <td>${record.fecha_hora}</td>
+                                    <td>${record.motivo_egreso ? 'Egreso: ' + record.motivo_egreso : 'Ingreso: ' + record.motivo_ingreso}</td>
+                                    <td>${record.descripcion}</td>
+                                    <td>${record.monto}</td>
+                                </tr>`;
+                                $('#tableBody').append(row);
+                            });
+                            // Después de llenar la tabla, actualizar el resumen de caja
+                            updateCashSummary(response.records);
+                        } else {
+                            alert('Hubo un error al obtener los registros de caja diaria.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error en la petición AJAX:', error);
+                        alert('Hubo un error en la petición AJAX al servidor.');
+                    }
+                });
+            }
+    
+            // Función para actualizar el resumen de caja
+            function updateCashSummary(records) {
+                // Inicializar variables para cálculos
+                let saldoInicial = 0;
+                let ingresosVentasEfectivo = 0;
+                let egresosCambioOtros = 0;
+    
+                // Calcular saldo inicial, ingresos y egresos
+                if (records && records.length > 0) {
+                    records.forEach(function(record) {
+                        if (record.motivo_ingreso === 'saldo_inicial') {
+                            saldoInicial += parseFloat(record.monto);
+                        } else if (record.motivo === 'ingreso' || record.motivo_ingreso) {
+                            ingresosVentasEfectivo += parseFloat(record.monto);
+                        } else if (record.motivo === 'egreso' || record.motivo_egreso) {
+                            egresosCambioOtros += parseFloat(record.monto);
+                        }
+                    });
+                }
+    
+                // Calcular total actual en caja
+                const totalCaja = saldoInicial + ingresosVentasEfectivo - egresosCambioOtros;
+    
+                // Actualizar los elementos HTML con los nuevos valores calculados
+                $('#saldoInicialSpan').text(saldoInicial.toFixed(2));
+                $('#ingresosVentasSpan').text(ingresosVentasEfectivo.toFixed(2));
+                $('#egresosOtrosSpan').text(egresosCambioOtros.toFixed(2));
+                $('#totalCaja').text(totalCaja.toFixed(2));
+            }
+    
+            // Cargar registros de caja al cargar la página
+            fetchDailyCashRecords();
+    
+            // Manejar el evento click del botón de cierre de caja
+            $('#cierreCajaButton').click(function() {
+                // Calcular el total en caja actual
+                const totalCaja = parseFloat($('#totalCaja').text());
+    
+                // Crear un objeto con los datos del registro de cierre de caja
+                const data = {
+                    id: 'ID_' + Date.now(),
+                    fecha_hora: getCurrentDateTime(),
+                    motivo: 'egreso',
+                    motivo_egreso: 'cierre_caja',
+                    descripcion: 'Cierre de caja',
+                    monto: totalCaja
+                };
+    
+                // Enviar una solicitud AJAX al servidor para registrar el cierre de caja
+                $.ajax({
+                    url: '/insert-daily-cash',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        if (response.success) {
+                            // Mostrar un mensaje de éxito o realizar alguna otra acción
+                            alert('Se ha realizado el cierre de caja correctamente.');
+    
+                            // Limpiar los campos del formulario y reiniciar los contadores
+                            $('#dailyCashForm')[0].reset();
+                            $('#saldoInicialSpan').text('0.00');
+                            $('#ingresosVentasSpan').text('0.00');
+                            $('#egresosOtrosSpan').text('0.00');
+                            $('#totalCaja').text('0.00');
+    
+                            // Actualizar la tabla de registros
+                            fetchDailyCashRecords();
+                        } else {
+                            alert('Hubo un error al procesar el cierre de caja.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error en la petición AJAX:', error);
+                        alert('Hubo un error en la petición AJAX al servidor.');
+                    }
+                });
+            });
+        });
+    </script>
+    
+    
+</body>
+</html>

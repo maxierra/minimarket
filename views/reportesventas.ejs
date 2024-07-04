@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes de Ventas</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <style>
+        /* Estilos personalizados aquí */
+        .table-centered td,
+        .table-centered th {
+            text-align: center; /* Centrar contenido horizontalmente */
+            vertical-align: middle; /* Centrar contenido verticalmente */
+        }
+    </style>
+</head>
+<body>
+      <!-- Navbar -->
+      <%- include('navbar') %>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Reportes de Ventas</h1>
+
+        <!-- Filtros y opciones de búsqueda -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Filtros y Opciones
+            </div>
+            <div class="card-body">
+                <form id="salesReportForm">
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="startDate">Fecha de Inicio</label>
+                            <input type="date" class="form-control" id="startDate" name="startDate">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="endDate">Fecha de Fin</label>
+                            <input type="date" class="form-control" id="endDate" name="endDate">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <button type="submit" class="btn btn-primary mt-4">Buscar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de reportes de ventas -->
+        <div class="card">
+            <div class="card-header">
+                Resultados de la Búsqueda
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-centered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Total de Venta Diaria</th>
+                                <th>Ganancia Neta Diaria</th>
+                                <th>Efectivo</th>
+                                <th>Tarjeta de Crédito</th>
+                                <th>Tarjeta de Débito</th>
+                                <th>MercadoPago</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesReportTableBody">
+                            <!-- Aquí se cargarán los datos dinámicamente con EJS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <!-- No necesitamos gráficos aquí -->
+    </div>
+
+    <!-- Bootstrap JS y jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <!-- Tu script personalizado para manejar la búsqueda y cargar los datos -->
+    <script>
+        $(document).ready(function() {
+            $('#salesReportForm').submit(function(event) {
+                event.preventDefault();
+                const startDate = $('#startDate').val();
+                const endDate = $('#endDate').val();
+
+                $.ajax({
+                    url: '/sales-reports',
+                    method: 'GET',
+                    data: {
+                        startDate: startDate,
+                        endDate: endDate
+                    },
+                    success: function(response) {
+                        // Actualizar la tabla con los datos recibidos
+                        const salesReportTableBody = $('#salesReportTableBody');
+                        salesReportTableBody.empty();
+
+                        response.records.forEach(function(sale) {
+                            const row = `<tr>
+                                <td>${sale.date}</td>
+                                <td>$${sale.totalDailySales.toFixed(2)}</td>
+                                <td>$${sale.netDailyProfit.toFixed(2)}</td>
+                                <td>${sale.efectivoPercentage.toFixed(2)}%</td>
+                                <td>${sale.creditoPercentage.toFixed(2)}%</td>
+                                <td>${sale.debitoPercentage.toFixed(2)}%</td>
+                                <td>${sale.mercadopagoPercentage.toFixed(2)}%</td>
+                            </tr>`;
+                            salesReportTableBody.append(row);
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error en la búsqueda de reportes de ventas:', error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

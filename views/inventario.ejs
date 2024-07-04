@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD de Productos</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <%- include('navbar') %>
+    <div class="container">
+        
+        <form id="productForm" class="mb-4">
+            <div class="form-group">
+                <label for="name">Nombre:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="brand">Marca:</label>
+                <input type="text" class="form-control" id="brand" name="brand" required>
+            </div>
+            <div class="form-group">
+                <label for="purchase_price">Precio de Compra:</label>
+                <input type="number" class="form-control" id="purchase_price" name="purchase_price" required step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="percentage_increase">Porcentaje de Incremento:</label>
+                <input type="number" class="form-control" id="percentage_increase" name="percentage_increase" required step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="sale_price">Precio de Venta:</label>
+                <input type="number" class="form-control" id="sale_price" name="sale_price" readonly>
+            </div>
+            <div class="form-group">
+                <label for="quantity">Cantidad:</label>
+                <input type="number" class="form-control" id="quantity" name="quantity" required>
+            </div>
+            <div class="form-group">
+                <label for="category">Categoría:</label>
+                <input type="text" class="form-control" id="category" name="category" required>
+            </div>
+            <div class="form-group">
+                <label for="expiration_date">Fecha de Vencimiento:</label>
+                <input type="date" class="form-control" id="expiration_date" name="expiration_date" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar</button>
+        </form>
+
+        <!-- Modal -->
+        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="successModalLabel">Mensaje</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="modalMessage"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2>Lista de Productos</h2>
+        <table class="table table-striped" id="productTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Marca</th>
+                    <th>Precio de Compra</th>
+                    <th>Porcentaje de Incremento</th>
+                    <th>Precio de Venta</th>
+                    <th>Cantidad</th>
+                    <th>Categoría</th>
+                    <th>Fecha de Vencimiento</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById('productForm').addEventListener('input', function(e) {
+            if (e.target.id === 'purchase_price' || e.target.id === 'percentage_increase') {
+                const purchase_price = parseFloat(document.getElementById('purchase_price').value) || 0;
+                const percentage_increase = parseFloat(document.getElementById('percentage_increase').value) || 0;
+                const sale_price = purchase_price * (1 + percentage_increase / 100);
+                document.getElementById('sale_price').value = sale_price.toFixed(2);
+            }
+        });
+
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const brand = document.getElementById('brand').value;
+            const purchase_price = document.getElementById('purchase_price').value;
+            const percentage_increase = document.getElementById('percentage_increase').value;
+            const sale_price = document.getElementById('sale_price').value;
+            const quantity = document.getElementById('quantity').value;
+            const category = document.getElementById('category').value;
+            const expiration_date = document.getElementById('expiration_date').value;
+            fetch('/products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Producto agregado:', data);
+                document.getElementById('productForm').reset();
+                document.getElementById('sale_price').value = '';
+                $('#successModal').modal('show');
+                document.getElementById('modalMessage').textContent = 'Producto cargado exitosamente';
+                loadProducts();
+            })
+            .catch(error => {
+                console.error('Error al agregar producto:', error);
+                $('#successModal').modal('show');
+                document.getElementById('modalMessage').textContent = 'Error al cargar producto';
+            });
+        });
+
+        function loadProducts() {
+            fetch('/products')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('productTable').querySelector('tbody');
+                    tableBody.innerHTML = '';
+                    data.products.forEach(product => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${product.id}</td>
+                            <td>${product.name}</td>
+                            <td>${product.brand}</td>
+                            <td>${product.purchase_price}</td>
+                            <td>${product.percentage_increase}</td>
+                            <td>${product.sale_price}</td>
+                            <td>${product.quantity}</td>
+                            <td>${product.category}</td>
+                            <td>${product.expiration_date}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Eliminar</button>
+                                <button class="btn btn-warning btn-sm" onclick="editProduct(${product.id})">Editar</button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                });
+        }
+
+        function deleteProduct(id) {
+            fetch(`/products/${id}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Producto eliminado:', data);
+                    loadProducts();
+                });
+        }
+
+        function editProduct(id) {
+            const name = prompt('Nuevo nombre:');
+            const brand = prompt('Nueva marca:');
+            const purchase_price = prompt('Nuevo precio de compra:');
+            const percentage_increase = prompt('Nuevo porcentaje de incremento:');
+            const quantity = prompt('Nueva cantidad:');
+            const category = prompt('Nueva categoría:');
+            const expiration_date = prompt('Nueva fecha de vencimiento:');
+            const sale_price = purchase_price * (1 + percentage_increase / 100);
+            fetch(`/products/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Producto actualizado:', data);
+                loadProducts();
+            });
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>
