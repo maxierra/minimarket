@@ -2,14 +2,15 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const path = require('path');
+const multer = require('multer');
 const app = express();
 const port = 3000;
-const { startAddingProducts, stopAddingProducts } = require('./fictitiousProducts');
 
 // Configurar middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('views'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Servir imágenes estáticamente
 
 // Configurar Express para renderizar vistas EJS desde la carpeta 'views'
 app.set('view engine', 'ejs');
@@ -18,7 +19,18 @@ app.set('views', path.join(__dirname, 'views'));
 // Configurar la base de datos SQLite3
 const db = new sqlite3.Database('./products.db');
 
-// Crear las tablas si no existen
+// Configurar multer para almacenar imágenes en la carpeta 'uploads'
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, './uploads/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage: storage });
+
+// Crear tablas si no existen y agregar columnas nuevas si faltan
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,21 +41,19 @@ db.serialize(() => {
         sale_price REAL NOT NULL,
         quantity INTEGER NOT NULL,
         category TEXT NOT NULL,
-        expiration_date TEXT NOT NULL
+        expiration_date TEXT NOT NULL,
+        category_en TEXT,
+        image_filename TEXT
     )`);
 
-    db.serialize(() => {
-        db.run(`CREATE TABLE IF NOT EXISTS daily_cash_control (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            fecha_hora TEXT NOT NULL,
-            motivo_egreso TEXT,
-            motivo_ingreso TEXT,
-            descripcion TEXT,
-            monto REAL NOT NULL
-        )`);
-    });
-    
-    
+    db.run(`CREATE TABLE IF NOT EXISTS daily_cash_control (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fecha_hora TEXT NOT NULL,
+        motivo_egreso TEXT,
+        motivo_ingreso TEXT,
+        descripcion TEXT,
+        monto REAL NOT NULL
+    )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS sales (
         sale_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,24 +72,36 @@ db.serialize(() => {
         FOREIGN KEY (sale_id) REFERENCES sales(sale_id),
         FOREIGN KEY (product_id) REFERENCES products(id)
     )`);
+
+    db.all("PRAGMA table_info(products)", (err, columns) => {
+        if (err) {
+            console.error('Error al obtener información de la tabla products:', err.message);
+            return;
+        }
+
+        const columnNames = columns.map(column => column.name);
+        if (!columnNames.includes('category_en')) {
+            db.run('ALTER TABLE products ADD COLUMN category_en TEXT');
+        }
+        if (!columnNames.includes('image_filename')) {
+            db.run('ALTER TABLE products ADD COLUMN image_filename TEXT');
+        }
+    });
 });
 
-// Ruta principal para cargar la página principal
+// Rutas principales
 app.get('/', (req, res) => {
     res.render('main.ejs');
 });
 
-// Ruta para la página de caja diaria
 app.get('/caja_diaria', (req, res) => {
     res.render('caja_diaria');
 });
 
-// Ruta para la página de reportes de ventas
 app.get('/reportesventas', (req, res) => {
     res.render('reportesventas');
 });
 
-// Rutas para inventario y ventas
 app.get('/inventario', (req, res) => {
     res.render('inventario.ejs');
 });
@@ -88,73 +110,62 @@ app.get('/ventas', (req, res) => {
     res.render('ventas.ejs');
 });
 
+// Ruta para insertar un registro de caja diaria
 app.post('/insert-daily-cash', (req, res) => {
     const { fecha_hora, motivo_egreso, motivo_ingreso, descripcion, monto } = req.body;
     const query = `INSERT INTO daily_cash_control (fecha_hora, motivo_egreso, motivo_ingreso, descripcion, monto) VALUES (?, ?, ?, ?, ?)`;
-    db.run(query, [fecha_hora, motivo_egreso, motivo_ingreso, descripcion, monto], function(err) {
+    db.run(query, [fecha_hora, motivo_egreso, motivo_ingreso, descripcion, monto], function (err) {
         if (err) {
+            console.error('Error al insertar el registro de caja diaria:', err.message);
             return res.status(500).json({ success: false, error: err.message });
         }
         res.json({ success: true, id: this.lastID });
     });
 });
 
-// Ejemplo de cómo podrías implementar un endpoint GET para obtener registros de caja diaria
-
+// Ruta para obtener los registros de caja diaria
 app.get('/get-daily-cash-records', (req, res) => {
-    const query = 'SELECT * FROM daily_cash_control ORDER BY id DESC';
-    db.all(query, (err, rows) => {
+    const query = `SELECT * FROM daily_cash_control ORDER BY fecha_hora DESC`;
+    db.all(query, [], (err, rows) => {
         if (err) {
-            return res.status(500).json({ success: false, error: err.message });
+            console.error('Error al obtener los registros de caja diaria:', err.message);
+            res.json({ success: false });
+        } else {
+            res.json({ success: true, records: rows });
         }
-        res.json({ success: true, records: rows });
     });
 });
 
-app.get('/sales-reports', (req, res) => {
-    const { startDate, endDate } = req.query;
-
-    let query = `
-        SELECT 
-            DATE(sale_date) as date, 
-            SUM(total_amount) as totalDailySales, 
-            SUM(net_profit) as netDailyProfit,
-            SUM(CASE WHEN payment_methods = 'Efectivo' THEN total_amount ELSE 0 END) * 100.0 / SUM(total_amount) as efectivoPercentage,
-            SUM(CASE WHEN payment_methods = 'Tarjeta de Crédito' THEN total_amount ELSE 0 END) * 100.0 / SUM(total_amount) as creditoPercentage,
-            SUM(CASE WHEN payment_methods = 'Tarjeta de Débito' THEN total_amount ELSE 0 END) * 100.0 / SUM(total_amount) as debitoPercentage,
-            SUM(CASE WHEN payment_methods = 'MercadoPago' THEN total_amount ELSE 0 END) * 100.0 / SUM(total_amount) as mercadopagoPercentage
-        FROM sales 
-        WHERE 1=1
-    `;
-    const params = [];
-
-    if (startDate) {
-        query += ' AND DATE(sale_date) >= ?';
-        params.push(startDate);
-    }
-
-    if (endDate) {
-        query += ' AND DATE(sale_date) <= ?';
-        params.push(endDate);
-    }
-
-    query += ' GROUP BY DATE(sale_date) ORDER BY DATE(sale_date) ASC';
-
-    db.all(query, params, (err, rows) => {
-        if (err) {
-            return res.status(500).json({ success: false, error: err.message });
-        }
-        res.json({ success: true, records: rows });
-    });
+// Ruta para subir imágenes de productos
+app.post('/upload-image', upload.single('image'), (req, res) => {
+    const imageFilename = req.file.filename;
+    res.json({ filename: imageFilename });
 });
 
+// Ruta para actualizar productos
+app.put('/products/:id', upload.single('image'), (req, res) => {
+    const { id } = req.params;
+    const { name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date, category_en } = req.body;
+    const image_filename = req.file ? req.file.filename : req.body.image_filename;
 
+    db.run(`UPDATE products SET name = ?, brand = ?, purchase_price = ?, percentage_increase = ?, sale_price = ?, quantity = ?, category = ?, expiration_date = ?, category_en = ?, image_filename = ? WHERE id = ?`,
+        [name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date, category_en, image_filename, id],
+        function (err) {
+            if (err) {
+                console.error('Error al actualizar el producto:', err.message);
+                return res.status(500).json({ error: err.message });
+            }
+            res.json({ updatedID: id });
+        });
+});
 
 // Rutas CRUD para productos
-app.post('/products', (req, res) => {
-    const { name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date } = req.body;
-    db.run(`INSERT INTO products (name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date],
+app.post('/products', upload.single('image'), (req, res) => {
+    const { name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date, category_en } = req.body;
+    const image_filename = req.file ? req.file.filename : null;
+
+    db.run(`INSERT INTO products (name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date, category_en, image_filename) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date, category_en, image_filename],
         function (err) {
             if (err) {
                 return res.status(500).json({ error: err.message });
@@ -174,25 +185,12 @@ app.get('/products', (req, res) => {
 
 app.get('/products/:id', (req, res) => {
     const { id } = req.params;
-    db.get(`SELECT id, name, brand, sale_price FROM products WHERE id = ?`, [id], (err, row) => {
+    db.get(`SELECT id, name, brand, sale_price, image_filename FROM products WHERE id = ?`, [id], (err, row) => { // Incluyendo image_filename
         if (err) {
             return res.status(500).json({ error: err.message });
         }
         res.json(row);
     });
-});
-
-app.put('/products/:id', (req, res) => {
-    const { name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date } = req.body;
-    const { id } = req.params;
-    db.run(`UPDATE products SET name = ?, brand = ?, purchase_price = ?, percentage_increase = ?, sale_price = ?, quantity = ?, category = ?, expiration_date = ? WHERE id = ?`,
-        [name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date, id],
-        function (err) {
-            if (err) {
-                return res.status(500).json({ error: err.message });
-            }
-            res.json({ updatedID: id });
-        });
 });
 
 app.delete('/products/:id', (req, res) => {
@@ -278,19 +276,62 @@ app.post('/finalize-sale', async (req, res) => {
     }
 });
 
- 
-// Rutas para controlar la carga de productos ficticios (si aplica)
-app.get('/start', (req, res) => {
-    startAddingProducts();
-    res.send('Comenzó la carga de productos ficticios.');
+// Ruta para buscar productos por ID
+app.get('/search-product', (req, res) => {
+    const { id } = req.query;
+    const query = `SELECT * FROM products WHERE id = ?`;
+
+    db.get(query, [id], (err, row) => {
+        if (err) {
+            console.error('Error al buscar el producto:', err.message);
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        if (!row) {
+            return res.status(404).json({ success: false, message: 'Producto no encontrado' });
+        }
+        res.json({ success: true, product: row });
+    });
 });
 
-app.get('/stop', (req, res) => {
-    stopAddingProducts();
-    res.send('Se detuvo la carga de productos ficticios.');
+app.get('/sales-reports', (req, res) => {
+    const { startDate, endDate } = req.query;
+
+    let query = `
+        SELECT 
+            DATE(sale_date) as date, 
+            SUM(total_amount) as totalDailySales, 
+            SUM(net_profit) as netDailyProfit,
+            SUM(CASE WHEN payment_methods = 'Efectivo' THEN total_amount ELSE 0 END) * 100.0 / SUM(total_amount) as efectivoPercentage,
+            SUM(CASE WHEN payment_methods = 'Tarjeta de Crédito' THEN total_amount ELSE 0 END) * 100.0 / SUM(total_amount) as creditoPercentage,
+            SUM(CASE WHEN payment_methods = 'Tarjeta de Débito' THEN total_amount ELSE 0 END) * 100.0 / SUM(total_amount) as debitoPercentage,
+            SUM(CASE WHEN payment_methods = 'MercadoPago' THEN total_amount ELSE 0 END) * 100.0 / SUM(total_amount) as mercadopagoPercentage
+        FROM sales 
+        WHERE 1=1
+    `;
+    const params = [];
+
+    if (startDate) {
+        query += ' AND DATE(sale_date) >= ?';
+        params.push(startDate);
+    }
+
+    if (endDate) {
+        query += ' AND DATE(sale_date) <= ?';
+        params.push(endDate);
+    }
+
+    query += ' GROUP BY DATE(sale_date) ORDER BY DATE(sale_date) ASC';
+
+    db.all(query, params, (err, rows) => {
+        if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.json({ success: true, records: rows });
+    });
 });
 
-// Iniciar el servidor
+
+
 app.listen(port, () => {
-    console.log(`Servidor escuchando en http://localhost:${port}`);
+    console.log(`Servidor iniciado en http://localhost:${port}`);
 });

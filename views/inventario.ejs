@@ -9,8 +9,9 @@
 <body>
     <%- include('navbar') %>
     <div class="container">
-        
+
         <form id="productForm" class="mb-4">
+            <!-- Formulario para agregar productos, incluyendo campos para la imagen -->
             <div class="form-group">
                 <label for="name">Nombre:</label>
                 <input type="text" class="form-control" id="name" name="name" required>
@@ -21,11 +22,11 @@
             </div>
             <div class="form-group">
                 <label for="purchase_price">Precio de Compra:</label>
-                <input type="number" class="form-control" id="purchase_price" name="purchase_price" required step="0.01">
+                <input type="number" class="form-control" id="purchase_price" name="purchase_price" required>
             </div>
             <div class="form-group">
                 <label for="percentage_increase">Porcentaje de Incremento:</label>
-                <input type="number" class="form-control" id="percentage_increase" name="percentage_increase" required step="0.01">
+                <input type="number" class="form-control" id="percentage_increase" name="percentage_increase" required>
             </div>
             <div class="form-group">
                 <label for="sale_price">Precio de Venta:</label>
@@ -40,8 +41,16 @@
                 <input type="text" class="form-control" id="category" name="category" required>
             </div>
             <div class="form-group">
+                <label for="category_en">Categoría en Inglés:</label>
+                <input type="text" class="form-control" id="category_en" name="category_en">
+            </div>
+            <div class="form-group">
                 <label for="expiration_date">Fecha de Vencimiento:</label>
                 <input type="date" class="form-control" id="expiration_date" name="expiration_date" required>
+            </div>
+            <div class="form-group">
+                <label for="image">Imagen:</label>
+                <input type="file" class="form-control-file" id="image" name="image">
             </div>
             <button type="submit" class="btn btn-primary">Agregar</button>
         </form>
@@ -77,6 +86,7 @@
                     <th>Cantidad</th>
                     <th>Categoría</th>
                     <th>Fecha de Vencimiento</th>
+                    <th>Imagen</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -99,20 +109,11 @@
 
         document.getElementById('productForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const name = document.getElementById('name').value;
-            const brand = document.getElementById('brand').value;
-            const purchase_price = document.getElementById('purchase_price').value;
-            const percentage_increase = document.getElementById('percentage_increase').value;
-            const sale_price = document.getElementById('sale_price').value;
-            const quantity = document.getElementById('quantity').value;
-            const category = document.getElementById('category').value;
-            const expiration_date = document.getElementById('expiration_date').value;
+            const formData = new FormData(this);
+
             fetch('/products', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date })
+                body: formData
             })
             .then(response => response.json())
             .then(data => {
@@ -148,6 +149,7 @@
                             <td>${product.quantity}</td>
                             <td>${product.category}</td>
                             <td>${product.expiration_date}</td>
+                            <td><img src="${product.image_filename ? '/uploads/' + product.image_filename : 'No disponible'}" alt="Imagen del producto" width="50"></td>
                             <td>
                                 <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Eliminar</button>
                                 <button class="btn btn-warning btn-sm" onclick="editProduct(${product.id})">Editar</button>
@@ -174,23 +176,35 @@
             const percentage_increase = prompt('Nuevo porcentaje de incremento:');
             const quantity = prompt('Nueva cantidad:');
             const category = prompt('Nueva categoría:');
+            const category_en = prompt('Nueva categoría en inglés:');
             const expiration_date = prompt('Nueva fecha de vencimiento:');
-            const sale_price = purchase_price * (1 + percentage_increase / 100);
+
             fetch(`/products/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date })
+                body: JSON.stringify({
+                    name,
+                    brand,
+                    purchase_price,
+                    percentage_increase,
+                    quantity,
+                    category,
+                    category_en,
+                    expiration_date
+                })
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Producto actualizado:', data);
+                console.log('Producto editado:', data);
                 loadProducts();
             });
         }
 
-        loadProducts();
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+        });
     </script>
 </body>
 </html>
