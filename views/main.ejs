@@ -61,16 +61,94 @@
             transition: margin-left .5s;
             padding: 16px;
         }
+
+        .card {
+            margin: 15px 0;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+        }
+
+        .align-right {
+            text-align: right !important;
+            margin-left: 10% !important;
+        }
     </style>
 </head>
 <body>
 
     <%- include('navbar') %>
 
-  
+    <div id="main">
+        <h1 class="mt-4" style="margin-left: 18%;">Bienvenido al Sistema de Punto de Venta Minimarket</h1>
+    <p class="lead" style="margin-left: 18%;">Este software te permite gestionar eficientemente tu minimarket con funcionalidades como:</p>
+
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                          <div class="card-body">
+                            <h5 class="card-title">Gestión de Inventario</h5>
+                            <p class="card-text">Administra los productos disponibles en tu inventario, agrega nuevos productos y actualiza las existencias.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Reportes de Ventas</h5>
+                            <p class="card-text">Genera reportes detallados de las ventas realizadas en un periodo específico para análisis y toma de decisiones.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Arqueo de Caja Diaria</h5>
+                            <p class="card-text">Lleva un control preciso del dinero en caja, incluyendo ingresos y egresos diarios.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Productos con Bajo Stock</h5>
+                            <p class="card-text">Identifica rápidamente los productos que están próximos a agotarse para reabastecerlos a tiempo.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Productos por Vencer</h5>
+                            <p class="card-text">Monitorea los productos que están cerca de su fecha de vencimiento para evitar pérdidas y optimizar la rotación de inventario.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Gestión de Ventas</h5>
+                            <p class="card-text">Realiza ventas de manera rápida y eficiente, con soporte para múltiples métodos de pago.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
- 
+        function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+        }
     </script>
 
 </body>
