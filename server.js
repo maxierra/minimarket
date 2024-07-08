@@ -63,6 +63,19 @@ db.serialize(() => {
         payment_methods TEXT
     )`);
 
+    // Crear la tabla de usuarios
+       db.run(`CREATE TABLE IF NOT EXISTS users (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       username TEXT NOT NULL UNIQUE,
+       password TEXT NOT NULL,
+       role TEXT NOT NULL
+)`, (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Tabla de usuarios creada o ya existe.');
+});
+
     db.run(`CREATE TABLE IF NOT EXISTS sale_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         sale_id INTEGER NOT NULL,
@@ -89,6 +102,45 @@ db.serialize(() => {
     });
 });
 
+// Ruta para servir la página de login
+app.get('/login', (req, res) => {
+    res.render('login');
+});
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    console.log('Received username:', username);
+    console.log('Received password:', password);
+
+    db.get('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], (err, row) => {
+        if (err) {
+            console.error('Error al ejecutar la consulta:', err);
+            res.status(500).json({ error: err.message });
+        } else {
+            console.log('Consulta ejecutada correctamente');
+            console.log('Resultado de la consulta:', row); // Agrega esta línea para verificar el resultado de la consulta
+
+            if (row) {
+                console.log('Usuario encontrado:', row);
+                res.json({ success: true });
+            } else {
+                console.log('Usuario no encontrado para:', username);
+                res.json({ success: false });
+            }
+        }
+    });
+});
+
+// Ruta para la página principal, redirige a login
+app.get('/', (req, res) => {
+    res.redirect('/login');
+});
+
+// Ruta para la página principal
+app.get('/main', (req, res) => {
+    res.render('main');
+});
+
 // Rutas principales
 app.get('/', (req, res) => {
     res.render('main.ejs');
@@ -109,6 +161,96 @@ app.get('/inventario', (req, res) => {
 app.get('/ventas', (req, res) => {
     res.render('ventas.ejs');
 });
+
+// Ruta para la página de configuración
+app.get('/configuracion', (req, res) => {
+    res.render('configuracion');
+});
+
+// API para manejar usuarios
+app.get('/api/users', (req, res) => {
+    db.all('SELECT * FROM users', [], (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json(rows);
+    });
+});
+
+app.post('/api/users', (req, res) => {
+    const { username, password, role } = req.body;
+    db.run(`INSERT INTO users (username, password, role) VALUES (?, ?, ?)`, [username, password, role], function(err) {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.status(201).json({ id: this.lastID, username, role });
+    });
+});
+
+app.delete('/api/users/:id', (req, res) => {
+    const { id } = req.params;
+  
+    // Busca el usuario en la base de datos
+    db.get(`SELECT * FROM users WHERE id = ?`, id, (err, row) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+  
+      // Verifica si el usuario es el usuario admin
+      if (row && row.username === 'admin' && row.password === 'admin2024') {
+        res.status(403).json({ error: 'No se puede eliminar el usuario admin' });
+        return;
+      }
+  
+      // Elimina el usuario de la base de datos
+      db.run(`DELETE FROM users WHERE id = ?`, id, function(err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        res.status(204).end();
+      });
+    });
+  });
+  
+
+  app.put('/api/users/:id', (req, res) => {
+    const { id } = req.params;
+    const { username, password, role } = req.body;
+  
+    // Busca el usuario en la base de datos
+    db.get(`SELECT * FROM users WHERE id = ?`, id, (err, row) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+  
+      // Verifica si el usuario es el usuario admin
+      if (row && row.username === 'admin' && row.password === 'admin2024') {
+        res.status(403).json({ error: 'No se puede editar el usuario admin' });
+        return;
+      }
+  
+      // Actualiza el usuario en la base de datos
+      db.run(
+        `UPDATE users SET username = ?, password = ?, role = ? WHERE id = ?`,
+        [username, password, role, id],
+        function (err) {
+          if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+          }
+          res.status(200).json({ id, username, role });
+        }
+      );
+    });
+  });
+  
+
+
 
 // Ruta para insertar un registro de caja diaria
 app.post('/insert-daily-cash', (req, res) => {
@@ -142,21 +284,28 @@ app.post('/upload-image', upload.single('image'), (req, res) => {
     res.json({ filename: imageFilename });
 });
 
-// Ruta para actualizar productos
-app.put('/products/:id', upload.single('image'), (req, res) => {
+app.put('/products/:id', (req, res) => {
     const { id } = req.params;
-    const { name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date, category_en } = req.body;
-    const image_filename = req.file ? req.file.filename : req.body.image_filename;
+    const { purchase_price, percentage_increase, sale_price, quantity, expiration_date } = req.body;
+    console.log('Precio de Compra recibido:', purchase_price);
 
-    db.run(`UPDATE products SET name = ?, brand = ?, purchase_price = ?, percentage_increase = ?, sale_price = ?, quantity = ?, category = ?, expiration_date = ?, category_en = ?, image_filename = ? WHERE id = ?`,
-        [name, brand, purchase_price, percentage_increase, sale_price, quantity, category, expiration_date, category_en, image_filename, id],
-        function (err) {
-            if (err) {
-                console.error('Error al actualizar el producto:', err.message);
-                return res.status(500).json({ error: err.message });
-            }
-            res.json({ updatedID: id });
-        });
+    const stmt = db.prepare(`
+        UPDATE products SET
+          purchase_price = ?,
+          percentage_increase = ?,
+          sale_price = ?,
+          quantity = ?,
+          expiration_date = ?
+        WHERE id = ?
+    `);
+
+    stmt.run([purchase_price, percentage_increase, sale_price, quantity, expiration_date, id], function (err) {
+        if (err) {
+            console.error('Error al actualizar el producto:', err.message);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ updatedID: id });
+    });
 });
 
 // Rutas CRUD para productos
@@ -192,7 +341,6 @@ app.get('/products/:id', (req, res) => {
         res.json(row);
     });
 });
-
 app.delete('/products/:id', (req, res) => {
     const { id } = req.params;
     db.run(`DELETE FROM products WHERE id = ?`, id, function (err) {
@@ -227,7 +375,7 @@ app.post('/finalize-sale', async (req, res) => {
                             return new Promise((resolveProduct, rejectProduct) => {
                                 db.get('SELECT purchase_price FROM products WHERE id = ?', [product.id], (err, row) => {
                                     if (err) return rejectProduct(err);
-                                    
+
                                     const netProfit = (product.sale_price - row.purchase_price) * product.quantity;
                                     totalNetProfit += netProfit;
 
@@ -329,8 +477,6 @@ app.get('/sales-reports', (req, res) => {
         res.json({ success: true, records: rows });
     });
 });
-
-
 
 app.listen(port, () => {
     console.log(`Servidor iniciado en http://localhost:${port}`);

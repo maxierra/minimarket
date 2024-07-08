@@ -7,7 +7,8 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <%- include('navbar') %>
+        <!-- Navbar -->
+        <%- include('navbar') %>
     <div class="container">
 
         <form id="productForm" class="mb-4">
@@ -55,7 +56,7 @@
             <button type="submit" class="btn btn-primary">Agregar</button>
         </form>
 
-        <!-- Modal -->
+        <!-- Modal de éxito -->
         <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -68,6 +69,49 @@
                     <div class="modal-body" id="modalMessage"></div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nuevo Modal para Editar Producto -->
+        <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editProductModalLabel">Editar Producto</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editProductForm">
+                            <input type="hidden" id="editProductId" name="id">
+                            <div class="form-group">
+                                <label for="editPurchasePrice">Precio de Compra:</label>
+                                <input type="number" class="form-control" id="editPurchasePrice" name="purchase_price" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editPercentageIncrease">Porcentaje de Incremento:</label>
+                                <input type="number" class="form-control" id="editPercentageIncrease" name="percentage_increase" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editSalePrice">Precio de Venta:</label>
+                                <input type="number" class="form-control" id="editSalePrice" name="sale_price" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="editQuantity">Cantidad:</label>
+                                <input type="number" class="form-control" id="editQuantity" name="quantity" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editExpirationDate">Fecha de Vencimiento:</label>
+                                <input type="date" class="form-control" id="editExpirationDate" name="expiration_date" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="saveEditButton">Guardar Cambios</button>
                     </div>
                 </div>
             </div>
@@ -95,9 +139,9 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Cálculo automático del precio de venta en el formulario de agregar productos
         document.getElementById('productForm').addEventListener('input', function(e) {
             if (e.target.id === 'purchase_price' || e.target.id === 'percentage_increase') {
                 const purchase_price = parseFloat(document.getElementById('purchase_price').value) || 0;
@@ -107,8 +151,10 @@
             }
         });
 
+        // Enviar formulario para agregar producto
         document.getElementById('productForm').addEventListener('submit', function(e) {
             e.preventDefault();
+
             const formData = new FormData(this);
 
             fetch('/products', {
@@ -118,19 +164,19 @@
             .then(response => response.json())
             .then(data => {
                 console.log('Producto agregado:', data);
-                document.getElementById('productForm').reset();
-                document.getElementById('sale_price').value = '';
                 $('#successModal').modal('show');
-                document.getElementById('modalMessage').textContent = 'Producto cargado exitosamente';
+                document.getElementById('modalMessage').textContent = 'Producto agregado exitosamente';
+                this.reset();
                 loadProducts();
             })
             .catch(error => {
                 console.error('Error al agregar producto:', error);
                 $('#successModal').modal('show');
-                document.getElementById('modalMessage').textContent = 'Error al cargar producto';
+                document.getElementById('modalMessage').textContent = 'Error al agregar producto';
             });
         });
 
+        // Cargar productos
         function loadProducts() {
             fetch('/products')
                 .then(response => response.json())
@@ -151,58 +197,98 @@
                             <td>${product.expiration_date}</td>
                             <td><img src="${product.image_filename ? '/uploads/' + product.image_filename : 'No disponible'}" alt="Imagen del producto" width="50"></td>
                             <td>
-                                <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Eliminar</button>
-                                <button class="btn btn-warning btn-sm" onclick="editProduct(${product.id})">Editar</button>
+                                <button class="btn btn-sm btn-primary editBtn" data-id="${product.id}">Editar</button>
+                                <button class="btn btn-sm btn-danger deleteBtn" data-id="${product.id}">Eliminar</button>
                             </td>
                         `;
                         tableBody.appendChild(row);
                     });
+                })
+                .catch(error => {
+                    console.error('Error al cargar productos:', error);
                 });
         }
 
-        function deleteProduct(id) {
-            fetch(`/products/${id}`, { method: 'DELETE' })
+        // Editar producto
+        $('#productTable').on('click', '.editBtn', function() {
+            const productId = $(this).data('id');
+            fetch(`/products/${productId}`)
                 .then(response => response.json())
-                .then(data => {
-                    console.log('Producto eliminado:', data);
-                    loadProducts();
+                .then(product => {
+                    $('#editProductId').val(product.id);
+                    $('#editPurchasePrice').val(product.purchase_price);
+                    $('#editPercentageIncrease').val(product.percentage_increase);
+                    $('#editSalePrice').val(product.sale_price);
+                    $('#editQuantity').val(product.quantity);
+                    $('#editExpirationDate').val(product.expiration_date);
+                    $('#editProductModal').modal('show');
+                })
+                .catch(error => {
+                    console.error('Error al obtener el producto para editar:', error);
                 });
-        }
+        });
 
-        function editProduct(id) {
-            const name = prompt('Nuevo nombre:');
-            const brand = prompt('Nueva marca:');
-            const purchase_price = prompt('Nuevo precio de compra:');
-            const percentage_increase = prompt('Nuevo porcentaje de incremento:');
-            const quantity = prompt('Nueva cantidad:');
-            const category = prompt('Nueva categoría:');
-            const category_en = prompt('Nueva categoría en inglés:');
-            const expiration_date = prompt('Nueva fecha de vencimiento:');
+        // Cálculo automático del precio de venta en el modal de edición
+        document.getElementById('editProductForm').addEventListener('input', function(e) {
+            if (e.target.id === 'editPurchasePrice' || e.target.id === 'editPercentageIncrease') {
+                const purchase_price = parseFloat(document.getElementById('editPurchasePrice').value) || 0;
+                const percentage_increase = parseFloat(document.getElementById('editPercentageIncrease').value) || 0;
+                const sale_price = purchase_price * (1 + percentage_increase / 100);
+                document.getElementById('editSalePrice').value = sale_price.toFixed(2);
+            }
+        });
 
-            fetch(`/products/${id}`, {
+        // Guardar cambios en el producto editado
+        $('#saveEditButton').on('click', function() {
+            const formData = $('#editProductForm').serialize();
+            const productId = $('#editProductId').val();
+
+            fetch(`/products/${productId}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                body: JSON.stringify({
-                    name,
-                    brand,
-                    purchase_price,
-                    percentage_increase,
-                    quantity,
-                    category,
-                    category_en,
-                    expiration_date
-                })
+                body: formData
             })
             .then(response => response.json())
             .then(data => {
                 console.log('Producto editado:', data);
+                $('#editProductModal').modal('hide');
+                $('#successModal').modal('show');
+                document.getElementById('modalMessage').textContent = 'Producto editado exitosamente';
                 loadProducts();
+            })
+            .catch(error => {
+                console.error('Error al editar producto:', error);
+                $('#editProductModal').modal('hide');
+                $('#successModal').modal('show');
+                document.getElementById('modalMessage').textContent = 'Error al editar producto';
             });
-        }
+        });
 
-        document.addEventListener('DOMContentLoaded', function() {
+        // Eliminar producto
+        $('#productTable').on('click', '.deleteBtn', function() {
+            const productId = $(this).data('id');
+            if (confirm(`¿Seguro que quieres eliminar el producto ${productId}?`)) {
+                fetch(`/products/${productId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Producto eliminado:', data);
+                    $('#successModal').modal('show');
+                    document.getElementById('modalMessage').textContent = 'Producto eliminado exitosamente';
+                    loadProducts();
+                })
+                .catch(error => {
+                    console.error('Error al eliminar producto:', error);
+                    $('#successModal').modal('show');
+                    document.getElementById('modalMessage').textContent = 'Error al eliminar producto';
+                });
+            }
+        });
+
+        $(document).ready(function() {
             loadProducts();
         });
     </script>
