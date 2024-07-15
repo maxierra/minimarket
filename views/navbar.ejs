@@ -10,7 +10,7 @@
         body {
             font-family: "Lato", sans-serif;
             margin: 0;
-            overflow-x: hidden; /* Evita desbordamiento horizontal */
+            overflow-x: hidden;
         }
 
         .sidebar {
@@ -20,17 +20,17 @@
             z-index: 1;
             top: 0;
             left: 0;
-            background-color: #066594;
+            background-color: #2c3e50;
             overflow-x: hidden;
             transition: 0.5s;
-            padding-top: 200px; /* Ajuste el espacio entre la parte superior y el contenido dentro del sidebar */
+            padding-top: 200px;
         }
 
         .sidebar a {
             padding: 10px 15px;
             text-decoration: none;
             font-size: 18px;
-            color: white;
+            color: #ecf0f1;
             display: block;
             transition: 0.3s;
         }
@@ -41,8 +41,8 @@
 
         .sidebar .closebtn {
             position: absolute;
-            top: 30px; /* Ajusta la posición vertical del botón de cierre */
-            right: 20px; /* Ajusta la posición horizontal del botón de cierre */
+            top: 30px;
+            right: 20px;
             font-size: 36px;
             margin-left: 50px;
             color: white;
@@ -52,12 +52,12 @@
         .openbtn {
             font-size: 20px;
             cursor: pointer;
-            background-color: #066594;
+            background-color: #2c3e50;
             color: white;
             padding: 10px 15px;
             border: none;
             position: fixed;
-            top: 60px; /* Ajusta la posición vertical del botón Menú */
+            top: 60px;
             left: 20px;
             z-index: 2;
         }
@@ -69,7 +69,76 @@
         #main {
             transition: margin-left .5s;
             padding: 16px;
-            margin-left: 0; /* Ajusta el margen izquierdo inicial para el contenido principal */
+            margin-left: 0;
+        }
+
+        .submenu {
+            display: none;
+            padding-left: 15px;
+        }
+
+        .submenu a {
+            font-size: 16px;
+        }
+
+        .sidebar .reportes-submenu {
+            display: none;
+            padding-left: 15px;
+        }
+
+        .sidebar .reportes-submenu a {
+            font-size: 16px;
+        }
+
+        .sidebar a.config-btn {
+            cursor: pointer;
+        }
+
+        /* Cambia el color de fondo del sidebar y los enlaces */
+        .sidebar {
+          background-color: #2c3e50;
+        }
+
+        .sidebar a {
+          color: #ecf0f1;
+        }
+
+        /* Estilo para el botón Configuración cuando está activo */
+        .config-btn::after {
+          content: "";
+          display: inline-block;
+          margin-left: 5px;
+          vertical-align: middle;
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-top: 5px solid #ecf0f1;
+          transition: transform 0.3s ease;
+        }
+
+        /* Estilo para el botón Configuración cuando el submenú está abierto */
+        .config-btn.active::after {
+          transform: rotate(180deg);
+        }
+
+        /* Estilo para el botón Reportes cuando está activo */
+        .reportes-btn::after {
+          content: "";
+          display: inline-block;
+          margin-left: 5px;
+          vertical-align: middle;
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-top: 5px solid #ecf0f1;
+          transition: transform 0.3s ease;
+        }
+
+        /* Estilo para el botón Reportes cuando el submenú está abierto */
+        .reportes-btn.active::after {
+          transform: rotate(180deg);
         }
     </style>
 </head>
@@ -78,22 +147,29 @@
 
     <div id="mySidebar" class="sidebar">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a href="/">Inicio</a>
+        <a href="/main">Inicio</a>
         <a href="/ventas">Ventas</a>
         <a href="/inventario">Inventario</a>
         <a href="/caja_diaria">Caja</a>
-        <a href="/reportesventas">Reportes</a>
-        <a href="/configuracion">Crear usuarios</a>
+        <a href="javascript:void(0)" class="reportes-btn" onclick="toggleReportesSubmenu()">Reportes</a>
+        <div class="reportes-submenu">
+            <a href="/reportesventas">Reportes Generales</a>
+            <a href="/ranking_productos">Ranking de Productos</a>
+        </div>
+        <a href="javascript:void(0)" class="config-btn" onclick="toggleSubmenu()">Configuración</a>
+        <div class="submenu" id="configSubmenu">
+            <a href="/configuracion">Crear usuarios</a>
+            <a href="/crear-comercio">Crear comercio</a>
+        </div>
         <a href="/login">Logout</a>
     </div>
 
     <div id="main">
         <button class="openbtn" onclick="toggleNav()">&#9776; Menú</button>
     </div>
-    
 
     <script>
-        let sidebarOpen = false; // Variable para controlar si el sidebar está abierto
+        let sidebarOpen = false;
 
         function toggleNav() {
             if (sidebarOpen) {
@@ -106,21 +182,46 @@
         function openNav() {
             document.getElementById("mySidebar").style.width = "250px";
             document.getElementById("main").style.marginLeft = "250px";
-            sidebarOpen = true; // Sidebar abierto
+            sidebarOpen = true;
         }
 
         function closeNav() {
             document.getElementById("mySidebar").style.width = "0";
             document.getElementById("main").style.marginLeft = "0";
-            sidebarOpen = false; // Sidebar cerrado
+            sidebarOpen = false;
         }
 
-        // Cerrar sidebar si no se usa después de cierto tiempo (ejemplo: 5 segundos)
+        function toggleSubmenu() {
+            const submenu = document.getElementById("configSubmenu");
+            const configBtn = document.querySelector(".config-btn");
+
+            if (submenu.style.display === "block") {
+                submenu.style.display = "none";
+                configBtn.classList.remove("active");
+            } else {
+                submenu.style.display = "block";
+                configBtn.classList.add("active");
+            }
+        }
+
+        function toggleReportesSubmenu() {
+            const reportesSubmenu = document.querySelector(".reportes-submenu");
+            const reportesBtn = document.querySelector(".reportes-btn");
+
+            if (reportesSubmenu.style.display === "block") {
+                reportesSubmenu.style.display = "none";
+                reportesBtn.classList.remove("active");
+            } else {
+                reportesSubmenu.style.display = "block";
+                reportesBtn.classList.add("active");
+            }
+        }
+
         setTimeout(function() {
             if (!sidebarOpen) {
                 closeNav();
             }
-        }, 2000); // Tiempo en milisegundos (5 segundos en este caso)
+        }, 3000);
     </script>
 
 </body>
