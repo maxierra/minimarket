@@ -62,6 +62,41 @@ db.serialize(() => {
         net_profit REAL,
         payment_methods TEXT
     )`);
+
+  // Crear la tabla de proveedores si no existe
+  db.run(
+    `CREATE TABLE IF NOT EXISTS providers (
+  provider_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  company_name TEXT NOT NULL,
+  cuit TEXT NOT NULL,
+  phone TEXT,
+  email TEXT,
+  contact_name TEXT
+)`,
+    (err) => {
+      if (err) {
+        console.error(err.message);
+      }
+      console.log("Tabla de proveedores creada o ya existía.");
+    }
+  );
+
+// Crear la tabla de pedidos con los campos adicionales
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS orders (
+      order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      provider_name TEXT NOT NULL,
+      contact_person TEXT,
+      order_date TEXT NOT NULL,
+      delivery_date TEXT,
+      order_status TEXT,
+      payment_status TEXT,
+      ordered_quantity INTEGER,
+      order_description TEXT,
+      invoice_number TEXT
+  )`);
+});
+
   // Crear la tabla commerce si no existe
   db.run(
     `CREATE TABLE IF NOT EXISTS commerce (
@@ -205,6 +240,17 @@ app.get("/crear-comercio", (req, res) => {
   res.render("crear_comercio");
 });
 
+// Ruta para renderizar la página proveedores.ejs
+app.get('/proveedores', (req, res) => {
+  res.render('proveedores', { title: 'Proveedores' });
+});
+
+// Ruta principal para servir la página de pedidos
+app.get('/pedidos', (req, res) => {
+  res.render('pedidos.ejs');
+});
+
+
 // Ruta para obtener los datos del comercio por ID
 app.get("/get-commerce-data/:id", (req, res) => {
   const sql = "SELECT * FROM commerce WHERE commerce_id = ?";
@@ -243,7 +289,7 @@ app.get("/ranking_productos", (req, res) => {
   });
 });
 
-app.get('/all-sale-items', (req, res) => {
+app.get("/all-sale-items", (req, res) => {
   const query = `
       SELECT 
           si.product_id, 
@@ -264,14 +310,138 @@ app.get('/all-sale-items', (req, res) => {
   `;
 
   db.all(query, [], (err, rows) => {
-      if (err) {
-          return res.status(500).json({ error: err.message });
-      }
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
 
-      res.json({ saleItems: rows });
+    res.json({ saleItems: rows });
   });
 });
 
+app.post('/add-order', (req, res) => {
+  let { provider_name, contact_person, order_date, delivery_date, order_status, payment_status, ordered_quantity, order_description, invoice_number } = req.body;
+  let sql = `INSERT INTO orders (provider_name, contact_person, order_date, delivery_date, order_status, payment_status, ordered_quantity, order_description, invoice_number) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  db.run(sql, [provider_name, contact_person, order_date, delivery_date, order_status, payment_status, ordered_quantity, order_description, invoice_number], function(err) {
+      if (err) {
+          return console.error(err.message);
+      }
+      console.log(`Pedido agregado con ID: ${this.lastID}`);
+      res.send('Pedido agregado correctamente');
+  });
+});
+
+// 2. Obtener todos los pedidos
+app.get('/get-orders', (req, res) => {
+  let sql = `SELECT * FROM orders`;
+  db.all(sql, [], (err, rows) => {
+      if (err) {
+          throw err;
+      }
+      res.json({ orders: rows });
+  });
+});
+
+// 3. Obtener un pedido por ID
+app.get('/get-order/:id', (req, res) => {
+  let orderId = req.params.id;
+  let sql = `SELECT * FROM orders WHERE order_id = ?`;
+  db.get(sql, [orderId], (err, row) => {
+      if (err) {
+          throw err;
+      }
+      res.json(row);
+  });
+});
+
+// 4. Actualizar un pedido por ID
+app.put('/update-order/:id', (req, res) => {
+  let orderId = req.params.id;
+  let { provider_name, contact_person, order_date, delivery_date, order_status, payment_status, ordered_quantity, order_description, invoice_number } = req.body;
+  let sql = `UPDATE orders 
+             SET provider_name = ?, contact_person = ?, order_date = ?, delivery_date = ?, order_status = ?, payment_status = ?, ordered_quantity = ?, order_description = ?, invoice_number = ?
+             WHERE order_id = ?`;
+  db.run(sql, [provider_name, contact_person, order_date, delivery_date, order_status, payment_status, ordered_quantity, order_description, invoice_number, orderId], function(err) {
+      if (err) {
+          return console.error(err.message);
+      }
+      console.log(`Pedido actualizado con ID: ${orderId}`);
+      res.send('Pedido actualizado correctamente');
+  });
+});
+
+// 5. Eliminar un pedido por ID
+app.delete('/delete-order/:id', (req, res) => {
+  let orderId = req.params.id;
+  let sql = `DELETE FROM orders WHERE order_id = ?`;
+  db.run(sql, [orderId], function(err) {
+      if (err) {
+          return console.error(err.message);
+      }
+      console.log(`Pedido eliminado con ID: ${orderId}`);
+      res.send('Pedido eliminado correctamente');
+  });
+});
+
+
+// Ruta para obtener todos los proveedores
+app.get('/get-providers', (req, res) => {
+  db.all('SELECT * FROM providers', (err, rows) => {
+      if (err) {
+          return res.status(500).send(err.message);
+      }
+      res.json({ providers: rows });
+  });
+});
+
+// Ruta para agregar un proveedor
+app.post('/add-provider', (req, res) => {
+  const { company_name, cuit, phone, email, contact_name } = req.body;
+  db.run(`INSERT INTO providers (company_name, cuit, phone, email, contact_name) VALUES (?, ?, ?, ?, ?)`,
+      [company_name, cuit, phone, email, contact_name],
+      function(err) {
+          if (err) {
+              return res.status(500).send(err.message);
+          }
+          res.json({ message: 'Proveedor agregado exitosamente', provider_id: this.lastID });
+      });
+});
+
+// Ruta para obtener un proveedor específico
+app.get('/get-provider/:id', (req, res) => {
+  const providerId = req.params.id;
+  db.get('SELECT * FROM providers WHERE provider_id = ?', [providerId], (err, row) => {
+      if (err) {
+          return res.status(500).send(err.message);
+      }
+      res.json(row);
+  });
+});
+
+// Ruta para editar un proveedor
+app.put('/edit-provider/:id', (req, res) => {
+  const providerId = req.params.id;
+  const { company_name, cuit, phone, email, contact_name } = req.body;
+  db.run(`UPDATE providers SET company_name = ?, cuit = ?, phone = ?, email = ?, contact_name = ? WHERE provider_id = ?`,
+      [company_name, cuit, phone, email, contact_name, providerId],
+      function(err) {
+          if (err) {
+              return res.status(500).send(err.message);
+          }
+          res.json({ message: 'Proveedor actualizado exitosamente' });
+      });
+});
+
+// Ruta para eliminar un proveedor
+app.delete('/delete-provider/:id', (req, res) => {
+  const providerId = req.params.id;
+  db.run('DELETE FROM providers WHERE provider_id = ?', [providerId], function(err) {
+      if (err) {
+          return res.status(500).send(err.message);
+      }
+      res.json({ message: 'Proveedor eliminado exitosamente' });
+  });
+});
 
 
 

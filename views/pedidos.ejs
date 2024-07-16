@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pedidos</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <%- include('navbar') %>
+
+    <div class="container">
+        <h1 class="mt-4">Gestión de Pedidos</h1>
+
+        <!-- Formulario para cargar un nuevo pedido -->
+        <form id="orderForm" class="mt-4">
+            <div class="form-group">
+                <label for="providerName">Nombre del Proveedor</label>
+                <input type="text" class="form-control" id="providerName" required>
+            </div>
+            <div class="form-group">
+                <label for="contactPerson">Persona de Contacto</label>
+                <input type="text" class="form-control" id="contactPerson">
+            </div>
+            <div class="form-group">
+                <label for="orderDate">Fecha de Pedido</label>
+                <input type="date" class="form-control" id="orderDate" required>
+            </div>
+            <div class="form-group">
+                <label for="deliveryDate">Fecha de Entrega</label>
+                <input type="date" class="form-control" id="deliveryDate">
+            </div>
+            <div class="form-group">
+                <label for="orderStatus">Estado del Pedido</label>
+                <select class="form-control" id="orderStatus">
+                    <option value="en proceso">En Proceso</option>
+                    <option value="pedido">Pedido</option>
+                    <option value="entregado">Entregado</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="paymentStatus">Estado del Pago</label>
+                <select class="form-control" id="paymentStatus">
+                    <option value="pendiente">Pendiente</option>
+                    <option value="pagado">Pagado</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="orderedQuantity">Cantidad Pedida</label>
+                <input type="number" class="form-control" id="orderedQuantity">
+            </div>
+            <div class="form-group">
+                <label for="orderDescription">Descripción del Pedido</label>
+                <textarea class="form-control" id="orderDescription" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="invoiceNumber">Número de Factura</label>
+                <input type="text" class="form-control" id="invoiceNumber">
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar Pedido</button>
+        </form>
+
+        <!-- Tabla para mostrar pedidos -->
+        <table class="table table-striped mt-4">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Proveedor</th>
+                    <th>Contacto</th>
+                    <th>Fecha de Pedido</th>
+                    <th>Fecha de Entrega</th>
+                    <th>Estado del Pedido</th>
+                    <th>Estado del Pago</th>
+                    <th>Cantidad Pedida</th>
+                    <th>Descripción</th>
+                    <th>Número de Factura</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="orderTableBody">
+                <!-- Los pedidos se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal para editar pedido -->
+    <div class="modal fade" id="editOrderModal" tabindex="-1" role="dialog" aria-labelledby="editOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editOrderModalLabel">Editar Pedido</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editOrderForm">
+                        <input type="hidden" id="editOrderId">
+                        <div class="form-group">
+                            <label for="editProviderName">Nombre del Proveedor</label>
+                            <input type="text" class="form-control" id="editProviderName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editContactPerson">Persona de Contacto</label>
+                            <input type="text" class="form-control" id="editContactPerson">
+                        </div>
+                        <div class="form-group">
+                            <label for="editOrderDate">Fecha de Pedido</label>
+                            <input type="date" class="form-control" id="editOrderDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDeliveryDate">Fecha de Entrega</label>
+                            <input type="date" class="form-control" id="editDeliveryDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="editOrderStatus">Estado del Pedido</label>
+                            <select class="form-control" id="editOrderStatus">
+                                <option value="en proceso">En Proceso</option>
+                                <option value="pedido">Pedido</option>
+                                <option value="entregado">Entregado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPaymentStatus">Estado del Pago</label>
+                            <select class="form-control" id="editPaymentStatus">
+                                <option value="pendiente">Pendiente</option>
+                                <option value="pagado">Pagado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editOrderedQuantity">Cantidad Pedida</label>
+                            <input type="number" class="form-control" id="editOrderedQuantity">
+                        </div>
+                        <div class="form-group">
+                            <label for="editOrderDescription">Descripción del Pedido</label>
+                            <textarea class="form-control" id="editOrderDescription" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="editInvoiceNumber">Número de Factura</label>
+                            <input type="text" class="form-control" id="editInvoiceNumber">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de Bootstrap y jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Script para manejar el CRUD de pedidos -->
+    <script>
+        $(document).ready(function() {
+            // Función para cargar pedidos en la tabla
+            function loadOrders() {
+                $.ajax({
+                    url: '/get-orders',
+                    method: 'GET',
+                    success: function(data) {
+                        let orders = data.orders;
+                        let orderTableBody = $('#orderTableBody');
+                        orderTableBody.empty();
+                        orders.forEach(order => {
+                            orderTableBody.append(`
+                                <tr>
+                                    <td>${order.order_id}</td>
+                                    <td>${order.provider_name}</td>
+                                    <td>${order.contact_person}</td>
+                                    <td>${order.order_date}</td>
+                                    <td>${order.delivery_date}</td>
+                                    <td>${order.order_status}</td>
+                                    <td>${order.payment_status}</td>
+                                    <td>${order.ordered_quantity}</td>
+                                    <td>${order.order_description}</td>
+                                    <td>${order.invoice_number}</td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm edit-btn" data-id="${order.order_id}">Editar</button>
+                                        <button class="btn btn-danger btn-sm delete-btn" data-id="${order.order_id}">Eliminar</button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    }
+                });
+            }
+
+            // Cargar pedidos al cargar la página
+            loadOrders();
+
+            // Manejar el formulario de carga de pedidos
+            $('#orderForm').submit(function(event) {
+                event.preventDefault();
+                let orderData = {
+                    provider_name: $('#providerName').val(),
+                    contact_person: $('#contactPerson').val(),
+                    order_date: $('#orderDate').val(),
+                    delivery_date: $('#deliveryDate').val(),
+                    order_status: $('#orderStatus').val(),
+                    payment_status: $('#paymentStatus').val(),
+                    ordered_quantity: $('#orderedQuantity').val(),
+                    order_description: $('#orderDescription').val(),
+                    invoice_number: $('#invoiceNumber').val()
+                };
+                $.ajax({
+                    url: '/add-order',
+                    method: 'POST',
+                    data: orderData,
+                    success: function(response) {
+                        $('#orderForm')[0].reset();
+                        loadOrders();
+                    }
+                });
+            });
+
+            // Manejar la edición de pedidos
+            $('#orderTableBody').on('click', '.edit-btn', function() {
+                let orderId = $(this).data('id');
+                
+                // Obtener la información del pedido y rellenar el formulario del modal
+                $.get(`/get-order/${orderId}`, function(order) {
+                    $('#editOrderId').val(order.order_id);
+                    $('#editProviderName').val(order.provider_name);
+                    $('#editContactPerson').val(order.contact_person);
+                    $('#editOrderDate').val(order.order_date);
+                    $('#editDeliveryDate').val(order.delivery_date);
+                    $('#editOrderStatus').val(order.order_status);
+                    $('#editPaymentStatus').val(order.payment_status);
+                    $('#editOrderedQuantity').val(order.ordered_quantity);
+                    $('#editOrderDescription').val(order.order_description);
+                    $('#editInvoiceNumber').val(order.invoice_number);
+
+                    // Mostrar el modal de edición
+                    $('#editOrderModal').modal('show');
+                });
+            });
+
+            // Manejar la actualización de pedidos desde el modal de edición
+            $('#editOrderForm').submit(function(event) {
+                event.preventDefault();
+                let orderId = $('#editOrderId').val();
+                let updatedOrder = {
+                    provider_name: $('#editProviderName').val(),
+                    contact_person: $('#editContactPerson').val(),
+                    order_date: $('#editOrderDate').val(),
+                    delivery_date: $('#editDeliveryDate').val(),
+                    order_status: $('#editOrderStatus').val(),
+                    payment_status: $('#editPaymentStatus').val(),
+                    ordered_quantity: $('#editOrderedQuantity').val(),
+                    order_description: $('#editOrderDescription').val(),
+                    invoice_number: $('#editInvoiceNumber').val()
+                };
+                $.ajax({
+                    url: `/update-order/${orderId}`,
+                    method: 'PUT',
+                    data: updatedOrder,
+                    success: function(response) {
+                        $('#editOrderModal').modal('hide');
+                        loadOrders();
+                    }
+                });
+            });
+
+            // Manejar la eliminación de pedidos
+            $('#orderTableBody').on('click', '.delete-btn', function() {
+                let orderId = $(this).data('id');
+                if (confirm('¿Estás seguro de eliminar este pedido?')) {
+                    $.ajax({
+                        url: `/delete-order/${orderId}`,
+                        method: 'DELETE',
+                        success: function(response) {
+                            loadOrders();
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
