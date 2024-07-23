@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -260,3 +261,267 @@
     </script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes de Ventas</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js date-fns adapter -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Custom CSS -->
+    <style>
+        /* Estilos personalizados aquí */
+        .table-centered td,
+        .table-centered th {
+            text-align: center; /* Centrar contenido horizontalmente */
+            vertical-align: middle; /* Centrar contenido verticalmente */
+        }
+        #paymentMethodsChartContainer {
+            width: 50%;
+            margin: 0 auto; /* Centrar el contenedor */
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <%- include('navbar') %>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Reportes de Ventas</h1>
+
+        <!-- Filtros y opciones de búsqueda -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Filtros y Opciones
+            </div>
+            <div class="card-body">
+                <form id="salesReportForm">
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="startDate">Fecha de Inicio</label>
+                            <input type="date" class="form-control" id="startDate" name="startDate">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="endDate">Fecha de Fin</label>
+                            <input type="date" class="form-control" id="endDate" name="endDate">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <button type="submit" class="btn btn-primary mt-4">Buscar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Gráfico de líneas -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Gráfico de Ventas Diarias
+            </div>
+            <div class="card-body">
+                <canvas id="dailySalesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfico circular -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Porcentaje de Métodos de Pago
+            </div>
+            <div class="card-body">
+                <div id="paymentMethodsChartContainer">
+                    <canvas id="paymentMethodsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de reportes de ventas -->
+        <div class="card">
+            <div class="card-header">
+                Resultados de la Búsqueda
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-centered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Total de Venta Diaria</th>
+                                <th>Ganancia Neta Diaria</th>
+                                <th>Efectivo</th>
+                                <th>Tarjeta de Crédito</th>
+                                <th>Tarjeta de Débito</th>
+                                <th>MercadoPago</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesReportTableBody">
+                            <!-- Aquí se cargarán los datos dinámicamente con EJS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS y jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <!-- Tu script personalizado para manejar la búsqueda y cargar los datos -->
+    <script>
+        $(document).ready(function() {
+            const ctxLine = document.getElementById('dailySalesChart').getContext('2d');
+            const ctxPie = document.getElementById('paymentMethodsChart').getContext('2d');
+
+            let dailySalesChart = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Total de Venta Diaria',
+                        data: [],
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Fecha'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Total de Venta Diaria'
+                            }
+                        }
+                    }
+                }
+            });
+
+            let paymentMethodsChart = new Chart(ctxPie, {
+                type: 'pie',
+                data: {
+                    labels: ['Efectivo', 'Tarjeta de Crédito', 'Tarjeta de Débito', 'MercadoPago'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            $('#salesReportForm').submit(function(event) {
+                event.preventDefault();
+                const startDate = $('#startDate').val();
+                const endDate = $('#endDate').val();
+
+                $.ajax({
+                    url: '/sales-reports',
+                    method: 'GET',
+                    data: {
+                        startDate: startDate,
+                        endDate: endDate
+                    },
+                    success: function(response) {
+                        if (!response.records || response.records.length === 0) {
+                            console.log('No se encontraron registros.');
+                            return;
+                        }
+
+                        // Actualizar la tabla con los datos recibidos
+                        const salesReportTableBody = $('#salesReportTableBody');
+                        salesReportTableBody.empty();
+
+                        const labels = [];
+                        const data = [];
+                        let efectivoTotal = 0;
+                        let creditoTotal = 0;
+                        let debitoTotal = 0;
+                        let mercadopagoTotal = 0;
+
+                        response.records.forEach(function(sale) {
+                            labels.push(sale.date);
+                            data.push(sale.totalDailySales);
+                            efectivoTotal += sale.efectivoPercentage;
+                            creditoTotal += sale.creditoPercentage;
+                            debitoTotal += sale.debitoPercentage;
+                            mercadopagoTotal += sale.mercadopagoPercentage;
+
+                            const row = `<tr>
+                                <td>${sale.date}</td>
+                                <td>$${sale.totalDailySales.toFixed(2)}</td>
+                                <td>$${sale.netDailyProfit.toFixed(2)}</td>
+                                <td>${sale.efectivoPercentage.toFixed(2)}%</td>
+                                <td>${sale.creditoPercentage.toFixed(2)}%</td>
+                                <td>${sale.debitoPercentage.toFixed(2)}%</td>
+                                <td>${sale.mercadopagoPercentage.toFixed(2)}%</td>
+                            </tr>`;
+                            salesReportTableBody.append(row);
+                        });
+
+                        // Calcular porcentajes promedio
+                        const totalRecords = response.records.length;
+                        const efectivoAvg = efectivoTotal / totalRecords;
+                        const creditoAvg = creditoTotal / totalRecords;
+                        const debitoAvg = debitoTotal / totalRecords;
+                        const mercadopagoAvg = mercadopagoTotal / totalRecords;
+
+                        // Actualizar el gráfico de líneas con los nuevos datos
+                        dailySalesChart.data.labels = labels;
+                        dailySalesChart.data.datasets[0].data = data;
+                        dailySalesChart.update();
+
+                        // Actualizar el gráfico circular con los nuevos datos
+                        paymentMethodsChart.data.datasets[0].data = [
+                            efectivoAvg,
+                            creditoAvg,
+                            debitoAvg,
+                            mercadopagoAvg
+                        ];
+                        paymentMethodsChart.update();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error en la búsqueda de reportes de ventas:', error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+>>>>>>> 22176c3 (Primer commit)

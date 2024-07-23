@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 
@@ -229,3 +230,236 @@
 </body>
 
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar Navigation</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Lato", sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #2c3e50;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 200px;
+        }
+
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ecf0f1;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #e91010;
+        }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 30px;
+            right: 20px;
+            font-size: 36px;
+            margin-left: 50px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            position: fixed;
+            top: 60px;
+            left: 20px;
+            z-index: 2;
+        }
+
+        .openbtn:hover {
+            background-color: #444;
+        }
+
+        #main {
+            transition: margin-left .5s;
+            padding: 16px;
+            margin-left: 0;
+        }
+
+        .submenu {
+            display: none;
+            padding-left: 15px;
+        }
+
+        .submenu a {
+            font-size: 16px;
+        }
+
+        .sidebar .reportes-submenu {
+            display: none;
+            padding-left: 15px;
+        }
+
+        .sidebar .reportes-submenu a {
+            font-size: 16px;
+        }
+
+        .sidebar a.config-btn {
+            cursor: pointer;
+        }
+
+        /* Cambia el color de fondo del sidebar y los enlaces */
+        .sidebar {
+          background-color: #2c3e50;
+        }
+
+        .sidebar a {
+          color: #ecf0f1;
+        }
+
+        /* Estilo para el botón Configuración cuando está activo */
+        .config-btn::after {
+          content: "";
+          display: inline-block;
+          margin-left: 5px;
+          vertical-align: middle;
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-top: 5px solid #ecf0f1;
+          transition: transform 0.3s ease;
+        }
+
+        /* Estilo para el botón Configuración cuando el submenú está abierto */
+        .config-btn.active::after {
+          transform: rotate(180deg);
+        }
+
+        /* Estilo para el botón Reportes cuando está activo */
+        .reportes-btn::after {
+          content: "";
+          display: inline-block;
+          margin-left: 5px;
+          vertical-align: middle;
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-top: 5px solid #ecf0f1;
+          transition: transform 0.3s ease;
+        }
+
+        /* Estilo para el botón Reportes cuando el submenú está abierto */
+        .reportes-btn.active::after {
+          transform: rotate(180deg);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="/main">Inicio</a>
+        <a href="/ventas">Ventas</a>
+        <a href="/inventario">Inventario</a>
+        <a href="/caja_diaria">Caja</a>
+        <a href="javascript:void(0)" class="reportes-btn" onclick="toggleReportesSubmenu()">Reportes</a>
+        <div class="reportes-submenu">
+            <a href="/reportesventas">Reportes Generales</a>
+            <a href="/ranking_productos">Ranking de Productos</a>
+        </div>
+        <a href="javascript:void(0)" class="config-btn" onclick="toggleSubmenu()">Configuración</a>
+        <div class="submenu" id="configSubmenu">
+            <a href="/configuracion">Crear usuarios</a>
+            <a href="/crear-comercio">Crear comercio</a>
+            <a href="/proveedores">Crear proveedor</a>
+            <a href="/pedidos">Crear pedidos</a>
+        </div>
+        <a href="/login">Logout</a>
+    </div>
+
+    <div id="main">
+        <button class="openbtn" onclick="toggleNav()">&#9776; Menú</button>
+    </div>
+
+    <script>
+        let sidebarOpen = false;
+
+        function toggleNav() {
+            if (sidebarOpen) {
+                closeNav();
+            } else {
+                openNav();
+            }
+        }
+
+        function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+            sidebarOpen = true;
+        }
+
+        function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+            sidebarOpen = false;
+        }
+
+        function toggleSubmenu() {
+            const submenu = document.getElementById("configSubmenu");
+            const configBtn = document.querySelector(".config-btn");
+
+            if (submenu.style.display === "block") {
+                submenu.style.display = "none";
+                configBtn.classList.remove("active");
+            } else {
+                submenu.style.display = "block";
+                configBtn.classList.add("active");
+            }
+        }
+
+        function toggleReportesSubmenu() {
+            const reportesSubmenu = document.querySelector(".reportes-submenu");
+            const reportesBtn = document.querySelector(".reportes-btn");
+
+            if (reportesSubmenu.style.display === "block") {
+                reportesSubmenu.style.display = "none";
+                reportesBtn.classList.remove("active");
+            } else {
+                reportesSubmenu.style.display = "block";
+                reportesBtn.classList.add("active");
+            }
+        }
+
+        setTimeout(function() {
+            if (!sidebarOpen) {
+                closeNav();
+            }
+        }, 3000);
+    </script>
+
+</body>
+
+</html>
+>>>>>>> 22176c3 (Primer commit)
