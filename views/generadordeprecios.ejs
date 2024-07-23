@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Precios</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    .card-custom {
+      border: 2px solid #007bff; /* Borde azul */
+      border-radius: 10px; /* Esquinas redondeadas */
+      box-shadow: 0 4px 8px rgba(0, 0, 255, 0.2); /* Sombra azul */
+    }
+    .card-custom .card-title {
+      color: #007bff; /* Texto azul para el título */
+    }
+    .card-custom .card-text {
+      font-size: 1.5em; /* Texto más grande */
+      font-weight: bold; /* Texto en negrita */
+      color: #000; /* Color negro */
+    }
+  </style>
+</head>
+<body>
+     <!-- Navbar -->
+     <%- include('navbar') %>
+  <div class="container mt-5">
+    <h1 class="text-center">Generador de Precios</h1>
+    <div class="form-group">
+      <label for="productId">ID del Producto:</label>
+      <input type="text" id="productId" class="form-control" placeholder="Ingrese el ID del producto">
+    </div>
+    <div class="form-group">
+      <label for="quantity">Cantidad:</label>
+      <input type="number" id="quantity" class="form-control" placeholder="Ingrese la cantidad a generar" min="1" value="1">
+    </div>
+    <button class="btn btn-primary mt-2" onclick="fetchProduct()">Generar Precio</button>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="productModalLabel">Precios Generados</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="productCards">
+          <!-- Las cards generadas se insertarán aquí -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function fetchProduct() {
+      const productId = document.getElementById('productId').value;
+      const quantity = parseInt(document.getElementById('quantity').value, 10);
+
+      if (!productId) {
+        alert('Por favor, ingrese un ID de producto.');
+        return;
+      }
+
+      if (quantity <= 0) {
+        alert('Por favor, ingrese una cantidad válida.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/products/${productId}/basic-info`);
+        if (!response.ok) {
+          throw new Error('Producto no encontrado');
+        }
+
+        const product = await response.json();
+
+        const productCardsContainer = document.getElementById('productCards');
+        productCardsContainer.innerHTML = ''; // Limpiar las cards anteriores
+
+        for (let i = 0; i < quantity; i++) {
+          const card = document.createElement('div');
+          card.className = 'card mt-3 card-custom';
+
+          const cardBody = document.createElement('div');
+          cardBody.className = 'card-body';
+
+          const cardTitle = document.createElement('h5');
+          cardTitle.className = 'card-title';
+          cardTitle.innerText = product.name;
+
+          const cardText = document.createElement('p');
+          cardText.className = 'card-text';
+          cardText.innerHTML = `Precio de Venta: $<span>${product.sale_price}</span>`;
+
+          cardBody.appendChild(cardTitle);
+          cardBody.appendChild(cardText);
+          card.appendChild(cardBody);
+          productCardsContainer.appendChild(card);
+        }
+
+        $('#productModal').modal('show'); // Mostrar el modal con las cards
+
+      } catch (error) {
+        alert('Error: ' + error.message);
+        document.getElementById('productCards').innerHTML = '';
+      }
+    }
+  </script>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
