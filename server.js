@@ -104,6 +104,11 @@ app.get("/pedidos", (req, res) => {
   res.render("pedidos.ejs");
 });
 
+app.get('/generadordeprecios', (req, res) => {
+  res.render('generadordeprecios');
+});
+
+
 app.get("/ranking_productos", (req, res) => {
   // Consulta para obtener los productos más y menos vendidos desde la tabla 'sale_items'
   const query = `
@@ -318,6 +323,22 @@ app.get("/products/:id", (req, res) => {
     }
   );
 });
+
+
+app.get("/products/:id/basic-info", (req, res) => {
+  const { id } = req.params;
+  db.get(
+    `SELECT name, sale_price FROM products WHERE id = ?`,
+    [id],
+    (err, row) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json(row);
+    }
+  );
+});
+
 
 app.delete("/products/:id", (req, res) => {
   const { id } = req.params;
