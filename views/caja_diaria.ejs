@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,7 +10,7 @@
     </div>
 
     <!-- Enlaces a tus estilos CSS -->
-    <link rel="stylesheet" href="/stylesheets/style.css">
+ 
     <!-- Inclusión de librerías de Bootstrap -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
@@ -166,7 +165,7 @@
                 };
     
                 $.ajax({
-                    url: '/insert-daily-cash',
+                    url: '/dailycash/insert-daily-cash',
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(data),
@@ -192,7 +191,7 @@
             // Función para obtener y mostrar los registros de la tabla
             function fetchDailyCashRecords() {
                 $.ajax({
-                    url: '/get-daily-cash-records',
+                    url: '/dailycash/get-daily-cash-records',
                     method: 'GET',
                     success: function(response) {
                         // Limpiar la tabla antes de actualizar
@@ -274,7 +273,7 @@
     
                 // Enviar una solicitud AJAX al servidor para registrar el cierre de caja
                 $.ajax({
-                    url: '/insert-daily-cash',
+                    url: '/dailycash/insert-daily-cash',
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(data),
@@ -307,3 +306,4 @@
     
     
 </body>
+</html>

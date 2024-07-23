@@ -1,220 +1,594 @@
-
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CRUD de Productos con Filtros</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <!-- Navbar -->
     <%- include('navbar') %>
-    
+
     <div class="container">
-        <form id="productForm" class="mb-4">
-            <!-- Formulario para agregar productos (sin cambios) -->
-            <div class="form-group">
-                <label for="name">Nombre:</label>
-                <input type="text" class="form-control" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="brand">Marca:</label>
-                <input type="text" class="form-control" id="brand" name="brand" required>
-            </div>
-            <div class="form-group">
-                <label for="purchase_price">Precio de Compra:</label>
-                <input type="number" class="form-control" id="purchase_price" name="purchase_price" required>
-            </div>
-            <div class="form-group">
-                <label for="percentage_increase">Porcentaje de Incremento:</label>
-                <input type="number" class="form-control" id="percentage_increase" name="percentage_increase" required>
-            </div>
-            <div class="form-group">
-                <label for="sale_price">Precio de Venta:</label>
-                <input type="number" class="form-control" id="sale_price" name="sale_price" readonly>
-            </div>
-            <div class="form-group">
-                <label for="quantity">Cantidad:</label>
-                <input type="number" class="form-control" id="quantity" name="quantity" required>
-            </div>
-            <div class="form-group">
-                <label for="category">Categoría:</label>
-                <input type="text" class="form-control" id="category" name="category" required>
-            </div>
-            <div class="form-group">
-                <label for="category_en">Categoría en Inglés:</label>
-                <input type="text" class="form-control" id="category_en" name="category_en">
-            </div>
-            <div class="form-group">
-                <label for="expiration_date">Fecha de Vencimiento:</label>
-                <input type="date" class="form-control" id="expiration_date" name="expiration_date" required>
-            </div>
-            <div class="form-group">
-                <label for="image">Imagen:</label>
-                <input type="file" class="form-control-file" id="image" name="image">
-            </div>
-            <button type="submit" class="btn btn-primary">Agregar</button>
-        </form>
-
-        <!-- Nuevos controles de filtro -->
-        <div class="row mb-3">
-            <div class="col">
-                <label for="quantityFilter">Cantidad mínima:</label>
-                <input type="number" id="quantityFilter" class="form-control" min="0">
-            </div>
-            <div class="col">
-                <label for="expirationFilter">Fecha de vencimiento hasta:</label>
-                <input type="date" id="expirationFilter" class="form-control">
-            </div>
-            <div class="col d-flex align-items-end">
-                <button id="applyFilters" class="btn btn-primary">Aplicar Filtros</button>
-            </div>
+      <form id="productForm" class="mb-4">
+        <!-- Formulario para agregar productos -->
+        <div class="form-group">
+          <label for="barcode">Código de Barras:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="barcode"
+            name="barcode"
+            required
+          />
         </div>
+        <div class="form-group">
+          <label for="name">Nombre:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="name"
+            name="name"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="brand">Marca:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="brand"
+            name="brand"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="purchase_price">Precio de Compra:</label>
+          <input
+            type="number"
+            class="form-control"
+            id="purchase_price"
+            name="purchase_price"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="percentage_increase">Porcentaje de Incremento:</label>
+          <input
+            type="number"
+            class="form-control"
+            id="percentage_increase"
+            name="percentage_increase"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="sale_price">Precio de Venta:</label>
+          <input
+            type="number"
+            class="form-control"
+            id="sale_price"
+            name="sale_price"
+            readonly
+          />
+        </div>
+        <div class="form-group">
+          <label for="quantity">Cantidad:</label>
+          <input
+            type="number"
+            class="form-control"
+            id="quantity"
+            name="quantity"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="category">Categoría:</label>
+          <select
+            class="form-control"
+            id="category"
+            name="category"
+            required
+            onchange="updateSubcategories()"
+          >
+            <option value="">Selecciona una categoría</option>
+            <option value="ALMACEN">ALMACEN</option>
+            <option value="DESAYUNO Y MERIENDA">DESAYUNO Y MERIENDA</option>
+            <option value="BEBIDAS">BEBIDAS</option>
+            <option value="LACTEOS Y PRODUCTOS FRESCOS">
+              LACTEOS Y PRODUCTOS FRESCOS
+            </option>
+            <option value="CARNES Y PESCADOS">CARNES Y PESCADOS</option>
+            <option value="FRUTAS Y VERDURAS">FRUTAS Y VERDURAS</option>
+            <option value="PANADERIA">PANADERIA</option>
+            <option value="CONGELADOS">CONGELADOS</option>
+            <option value="LIMPIEZA">LIMPIEZA</option>
+            <option value="PERFUMERIA">PERFUMERIA</option>
+            <option value="MASCOTAS">MASCOTAS</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="subcategory">Subcategoría:</label>
+          <select
+            class="form-control"
+            id="subcategory"
+            name="category_en"
+            required
+          >
+            <option value="">Selecciona una subcategoría</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="expiration_date">Fecha de Vencimiento:</label>
+          <input
+            type="date"
+            class="form-control"
+            id="expiration_date"
+            name="expiration_date"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="image">Imagen:</label>
+          <input
+            type="file"
+            class="form-control-file"
+            id="image"
+            name="image"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">Agregar</button>
+      </form>
 
-        <h2>Lista de Productos</h2>
-        <table class="table table-striped" id="productTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Marca</th>
-                    <th>Precio de Compra</th>
-                    <th>Porcentaje de Incremento</th>
-                    <th>Precio de Venta</th>
-                    <th>Cantidad</th>
-                    <th>Categoría</th>
-                    <th>Fecha de Vencimiento</th>
-                    <th>Imagen</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+      <!-- Nuevos controles de filtro -->
+      <div class="row mb-3">
+        <div class="col">
+          <label for="quantityFilter">Cantidad mínima:</label>
+          <input
+            type="number"
+            id="quantityFilter"
+            class="form-control"
+            min="0"
+          />
+        </div>
+        <div class="col">
+          <label for="expirationFilter">Fecha de vencimiento hasta:</label>
+          <input type="date" id="expirationFilter" class="form-control" />
+        </div>
+        <div class="col d-flex align-items-end">
+          <button id="applyFilters" class="btn btn-primary">
+            Aplicar Filtros
+          </button>
+        </div>
+      </div>
+
+      <h2>Lista de Productos</h2>
+      <table class="table table-striped" id="productTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Código de Barras</th>
+            <th>Nombre</th>
+            <th>Marca</th>
+            <th>Precio de Compra</th>
+            <th>Porcentaje de Incremento</th>
+            <th>Precio de Venta</th>
+            <th>Cantidad</th>
+            <th>Categoría</th>
+            <th>Subcategoría</th>
+            <th>Fecha de Vencimiento</th>
+            <th>Imagen</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
 
-    <!-- Modal de éxito (sin cambios) -->
-    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="successModalLabel">Mensaje</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" id="modalMessage"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
+    <!-- Modal de éxito -->
+    <div
+      class="modal fade"
+      id="successModal"
+      tabindex="-1"
+      aria-labelledby="successModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="successModalLabel">
+              Producto cargado exitosamente
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="modalMessage"></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Modal para Editar Producto (sin cambios) -->
-    <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editProductModalLabel">Editar Producto</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="editProductForm">
-                        <input type="hidden" id="editProductId" name="id">
-                        <div class="form-group">
-                            <label for="editPurchasePrice">Precio de Compra:</label>
-                            <input type="number" class="form-control" id="editPurchasePrice" name="purchase_price" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="editPercentageIncrease">Porcentaje de Incremento:</label>
-                            <input type="number" class="form-control" id="editPercentageIncrease" name="percentage_increase" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="editSalePrice">Precio de Venta:</label>
-                            <input type="number" class="form-control" id="editSalePrice" name="sale_price" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="editQuantity">Cantidad:</label>
-                            <input type="number" class="form-control" id="editQuantity" name="quantity" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="editExpirationDate">Fecha de Vencimiento:</label>
-                            <input type="date" class="form-control" id="editExpirationDate" name="expiration_date" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="saveEditButton">Guardar Cambios</button>
-                </div>
-            </div>
+    <!-- Modal para Editar Producto -->
+    <div
+      class="modal fade"
+      id="editProductModal"
+      tabindex="-1"
+      aria-labelledby="editProductModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editProductModalLabel">
+              Editar Producto
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="editProductForm">
+              <input type="hidden" id="editProductId" name="id" />
+              <div class="form-group">
+                <label for="editBarcode">Código de Barras:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editBarcode"
+                  name="barcode"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="editName">Nombre:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editName"
+                  name="name"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="editBrand">Marca:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editBrand"
+                  name="brand"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="editPurchasePrice">Precio de Compra:</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="editPurchasePrice"
+                  name="purchase_price"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="editPercentageIncrease"
+                  >Porcentaje de Incremento:</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="editPercentageIncrease"
+                  name="percentage_increase"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="editSalePrice">Precio de Venta:</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="editSalePrice"
+                  name="sale_price"
+                  readonly
+                />
+              </div>
+              <div class="form-group">
+                <label for="editQuantity">Cantidad:</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="editQuantity"
+                  name="quantity"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="editCategory">Categoría:</label>
+                <select
+                  class="form-control"
+                  id="editCategory"
+                  name="category"
+                  required
+                  onchange="updateEditSubcategories()"
+                >
+                  <option value="">Selecciona una categoría</option>
+                  <option value="ALMACEN">ALMACEN</option>
+                  <option value="DESAYUNO Y MERIENDA">
+                    DESAYUNO Y MERIENDA
+                  </option>
+                  <option value="BEBIDAS">BEBIDAS</option>
+                  <option value="LACTEOS Y PRODUCTOS FRESCOS">
+                    LACTEOS Y PRODUCTOS FRESCOS
+                  </option>
+                  <option value="CARNES Y PESCADOS">CARNES Y PESCADOS</option>
+                  <option value="FRUTAS Y VERDURAS">FRUTAS Y VERDURAS</option>
+                  <option value="PANADERIA">PANADERIA</option>
+                  <option value="CONGELADOS">CONGELADOS</option>
+                  <option value="LIMPIEZA">LIMPIEZA</option>
+                  <option value="PERFUMERIA">PERFUMERIA</option>
+                  <option value="MASCOTAS">MASCOTAS</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="editSubcategory">Subcategoría:</label>
+                <select
+                  class="form-control"
+                  id="editSubcategory"
+                  name="category_en"
+                  required
+                >
+                  <option value="">Selecciona una subcategoría</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="editExpirationDate">Fecha de Vencimiento:</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="editExpirationDate"
+                  name="expiration_date"
+                  required
+                />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-primary" id="saveEditButton">
+              Guardar Cambios
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <script>
-        let allProducts = []; // Almacenará todos los productos
+      let allProducts = []; // Almacenará todos los productos
 
-        // Cálculo automático del precio de venta en el formulario de agregar productos
-        document.getElementById('productForm').addEventListener('input', function(e) {
-            if (e.target.id === 'purchase_price' || e.target.id === 'percentage_increase') {
-                const purchase_price = parseFloat(document.getElementById('purchase_price').value) || 0;
-                const percentage_increase = parseFloat(document.getElementById('percentage_increase').value) || 0;
-                const sale_price = purchase_price * (1 + percentage_increase / 100);
-                document.getElementById('sale_price').value = sale_price.toFixed(2);
-            }
-        });
-        
-        // Enviar formulario para agregar producto
-        document.getElementById('productForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-        
-            const formData = new FormData(this);
-        
-            fetch('/products', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Producto agregado:', data);
-                $('#successModal').modal('show');
-                document.getElementById('modalMessage').textContent = 'Producto agregado exitosamente';
-                this.reset();
-                loadProducts();
-            })
-            .catch(error => {
-                console.error('Error al agregar producto:', error);
-                $('#successModal').modal('show');
-                document.getElementById('modalMessage').textContent = 'Error al agregar producto';
-            });
-        });
-        
-        // Cargar productos
-        function loadProducts() {
-            fetch('/products')
-                .then(response => response.json())
-                .then(data => {
-                    allProducts = data.products; // Guarda todos los productos
-                    applyFilters(); // Aplica los filtros actuales al cargar los productos
-                })
-                .catch(error => {
-                    console.error('Error al cargar productos:', error);
-                });
+      const categoriesWithSubcategories = {
+        ALMACEN: [
+          "ACEITES Y VINAGRES",
+          "PASTA SECAS",
+          "ARROY LEGUMBRES",
+          "HARINAS",
+          "ENLATADOS Y CONSERVAS",
+          "SAL ADEREZOS Y SABORIZANTES",
+          "CALDOS SOPAS Y PURE",
+          "REPOSTERIA Y POSTRES",
+          "SNACKS",
+        ],
+        "DESAYUNO Y MERIENDA": [
+          "GALLETITAS BISCOCHITOS Y TOSTADAS",
+          "BUDINES Y MAGDALENAS",
+          "YERBA",
+          "CAFÉ",
+          "INFUSIONES",
+          "AZUCAR Y ENDULZANTES",
+          "MERMELADAS Y OTROS DULCES",
+          "CEREALES Y BARRITAS",
+          "GOLOSINAS Y CHOCOLATES",
+        ],
+        BEBIDAS: [
+          "CERVEZAS",
+          "VINOS",
+          "FERNET Y APERITIVOS",
+          "BEBIDAS BLANCAS",
+          "GASEOSAS",
+          "AGUAS",
+          "JUGOS",
+          "BEBIDAS ISOTONICAS",
+          "BEBIDAS ENERGIZANTES",
+          "ESPUMANTES Y SIDRAS",
+        ],
+        "LACTEOS Y PRODUCTOS FRESCOS": [
+          "LECHES",
+          "YOGURES",
+          "MANTECAS MARGARINA Y LEVADURAS",
+          "DULCE DE LECHE",
+          "CREMA DE LECHE",
+          "POSTRES",
+          "HUEVOS",
+          "TAPAS Y PASTAS FRESCAS",
+          "DULCE DE MEMBRILLO Y OTROS DULCES",
+          "SALCHICHAS",
+          "QUESOS",
+          "FIAMBRES",
+        ],
+        "CARNES Y PESCADOS": [
+          "CARNE VACUNA",
+          "POLLO Y GRANJA",
+          "CARNE DE CERDO",
+          "ACHURAS Y EMBUTIDOS",
+          "PESCADO Y MARISCOS",
+          "CARBON Y ENCENDIDO",
+        ],
+        "FRUTAS Y VERDURAS": ["FRUTAS", "VERDURAS"],
+        PANADERIA: [
+          "PANIFICADOS",
+          "PAN RALLADO Y REBOZAORES",
+          "PIZZAS Y PREPIZZAS",
+          "SANDWICHES EMPANADAS Y TARTAS",
+        ],
+        CONGELADOS: [
+          "HAMBURGUESAS",
+          "NUGGETS Y REBOZADOS",
+          "PAPAS",
+          "VERDURAS Y FRUTAS",
+          "COMIDAS Y PANIFICADOS",
+          "HELADOS Y POSTRES",
+          "POLLOS",
+          "PESCADOS Y MARISCOS",
+        ],
+        LIMPIEZA: [
+          "LIMPIEZA DE ROPA",
+          "LIMPIEZA DEL HOGAR",
+          "INSECTICIDAS",
+          "LIMPIEZA DE COCINA",
+          "LAVANDINAS",
+          "ROLLOS DE COCINA Y SERVILLETAS",
+          "PAPELES HIGIENICOS",
+          "LIMPIEZA DE BAÑO",
+          "DESODORANTES DE AMBIENTE",
+          "ARTICULOS DE LIMPIEZA",
+        ],
+        PERFUMERIA: [
+          "CUIDADO DEL CABELLO",
+          "CUIDADO DENTAL",
+          "JABONES",
+          "PROTECCION FEMENINA",
+          "CUIDADO DE LA PIEL",
+          "ANTITRANSPIRANTES Y DESODORANTES",
+          "CUIDADO CORPORAL",
+          "REPELENTES",
+          "ALGODONES E HISOPOS",
+          "FARMACIA",
+          "PROTECCION PARA  ADULTOS",
+          "FRAGANCIAS Y MAQUILLAJES",
+        ],
+        MASCOTAS: [
+          "ALIMENTO PARA PERROS",
+          "ALIMENTO PARA GATOS",
+          "HIGIENE PARA MASCOTAS",
+          "ACCESORIOS PARA MASCOTAS",
+        ],
+      };
+
+      function updateSubcategories() {
+        const category = document.getElementById("category").value;
+        const subcategorySelect = document.getElementById("subcategory");
+        subcategorySelect.innerHTML =
+          "<option value=''>Selecciona una subcategoría</option>";
+        if (category) {
+          const subcategories = categoriesWithSubcategories[category];
+          subcategories.forEach((subcategory) => {
+            const option = document.createElement("option");
+            option.value = subcategory;
+            option.textContent = subcategory;
+            subcategorySelect.appendChild(option);
+          });
         }
-        
-        // Mostrar productos en la tabla
-        function displayProducts(products) {
-            const tableBody = document.getElementById('productTable').querySelector('tbody');
-            tableBody.innerHTML = '';
-            products.forEach(product => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
+      }
+
+      function updateEditSubcategories() {
+        const category = document.getElementById("editCategory").value;
+        const subcategorySelect = document.getElementById("editSubcategory");
+        subcategorySelect.innerHTML =
+          "<option value=''>Selecciona una subcategoría</option>";
+        if (category) {
+          const subcategories = categoriesWithSubcategories[category];
+          subcategories.forEach((subcategory) => {
+            const option = document.createElement("option");
+            option.value = subcategory;
+            option.textContent = subcategory;
+            subcategorySelect.appendChild(option);
+          });
+        }
+      }
+
+      // Cálculo automático del precio de venta en el formulario de agregar productos
+      document
+        .getElementById("productForm")
+        .addEventListener("input", function (e) {
+          if (
+            e.target.id === "purchase_price" ||
+            e.target.id === "percentage_increase"
+          ) {
+            const purchase_price =
+              parseFloat(document.getElementById("purchase_price").value) || 0;
+            const percentage_increase =
+              parseFloat(
+                document.getElementById("percentage_increase").value
+              ) || 0;
+            const sale_price = purchase_price * (1 + percentage_increase / 100);
+            document.getElementById("sale_price").value = sale_price.toFixed(2);
+          }
+        });
+
+      // Enviar formulario para agregar producto
+      document
+        .getElementById("productForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+
+          fetch("/products", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              $("#modalMessage").text(data.message);
+              $("#productForm").trigger("reset"); // Limpiar el formulario después de agregar un producto
+              loadProducts(); // Cargar productos después de agregar uno nuevo
+              $("#successModal").modal("show"); // Mostrar el modal de éxito
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+
+      // Cargar productos
+      function loadProducts() {
+        fetch("/products")
+          .then((response) => response.json())
+          .then((data) => {
+            allProducts = data; // Guardar todos los productos
+            const tbody = document.querySelector("#productTable tbody");
+            tbody.innerHTML = "";
+            data.forEach((product) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
                     <td>${product.id}</td>
+                    <td>${product.barcode}</td>
                     <td>${product.name}</td>
                     <td>${product.brand}</td>
                     <td>${product.purchase_price}</td>
@@ -222,120 +596,236 @@
                     <td>${product.sale_price}</td>
                     <td>${product.quantity}</td>
                     <td>${product.category}</td>
+                    <td>${product.category_en}</td>
                     <td>${product.expiration_date}</td>
-                    <td><img src="${product.image_filename ? '/uploads/' + product.image_filename : 'No disponible'}" alt="Imagen del producto" width="50"></td>
+                    <td><img src="${
+                      product.image_filename
+                        ? "/uploads/" + product.image_filename
+                        : "No disponible"
+                    }" alt="Imagen de ${
+                product.name
+              }" style="width: 50px; height: auto;"></td>
                     <td>
-                        <button class="btn btn-sm btn-primary editBtn" data-id="${product.id}">Editar</button>
-                        <button class="btn btn-sm btn-danger deleteBtn" data-id="${product.id}">Eliminar</button>
+                        <button class="btn btn-warning btn-sm edit-btn" data-id="${
+                          product.id
+                        }">Editar</button>
+                        <button class="btn btn-danger btn-sm delete-btn" data-id="${
+                          product.id
+                        }">Eliminar</button>
                     </td>
                 `;
-                tableBody.appendChild(row);
+              tbody.appendChild(tr);
             });
-        }
-        
-        // Función para aplicar filtros
-        function applyFilters() {
-            const maxQuantity = document.getElementById('quantityFilter').value;
-            const maxExpiration = document.getElementById('expirationFilter').value;
-            
-            let filteredProducts = allProducts;
-        
-            if (maxQuantity) {
-                filteredProducts = filteredProducts.filter(product => product.quantity <= parseInt(maxQuantity));
+          })
+          .catch((error) => console.error("Error:", error));
+      }
+
+      loadProducts();
+
+      // Editar producto
+      document
+        .querySelector("#productTable")
+        .addEventListener("click", function (e) {
+          if (e.target.classList.contains("edit-btn")) {
+            const productId = e.target.dataset.id;
+            const product = allProducts.find((p) => p.id == productId);
+
+            document.getElementById("editProductId").value = product.id;
+            document.getElementById("editBarcode").value = product.barcode;
+            document.getElementById("editName").value = product.name;
+            document.getElementById("editBrand").value = product.brand;
+            document.getElementById("editPurchasePrice").value =
+              product.purchase_price;
+            document.getElementById("editPercentageIncrease").value =
+              product.percentage_increase;
+            document.getElementById("editSalePrice").value = product.sale_price;
+            document.getElementById("editQuantity").value = product.quantity;
+            document.getElementById("editCategory").value = product.category;
+            updateEditSubcategories();
+            document.getElementById("editSubcategory").value =
+              product.category_en;
+            document.getElementById("editExpirationDate").value =
+              product.expiration_date;
+
+            // Agregar event listener para los campos editPurchasePrice y editPercentageIncrease
+            const editPurchasePriceInput =
+              document.getElementById("editPurchasePrice");
+            const editPercentageIncreaseInput = document.getElementById(
+              "editPercentageIncrease"
+            );
+            const editSalePriceInput = document.getElementById("editSalePrice");
+
+            editPurchasePriceInput.addEventListener(
+              "input",
+              calculateEditSalePrice
+            );
+            editPercentageIncreaseInput.addEventListener(
+              "input",
+              calculateEditSalePrice
+            );
+
+            function calculateEditSalePrice() {
+              const purchasePrice =
+                parseFloat(editPurchasePriceInput.value) || 0;
+              const percentageIncrease =
+                parseFloat(editPercentageIncreaseInput.value) || 0;
+              const salePrice = purchasePrice * (1 + percentageIncrease / 100);
+              editSalePriceInput.value = salePrice.toFixed(2);
             }
-        
-            if (maxExpiration) {
-                filteredProducts = filteredProducts.filter(product => new Date(product.expiration_date) <= new Date(maxExpiration));
-            }
-        
-            displayProducts(filteredProducts);
-        }
-        
-        // Eventos para aplicar filtros
-        document.getElementById('quantityFilter').addEventListener('input', applyFilters);
-        document.getElementById('expirationFilter').addEventListener('input', applyFilters);
-        
-        // Editar producto
-        $('#productTable').on('click', '.editBtn', function() {
-            const productId = $(this).data('id');
-            fetch(`/products/${productId}`)
-                .then(response => response.json())
-                .then(product => {
-                    $('#editProductId').val(product.id);
-                    $('#editPurchasePrice').val(product.purchase_price);
-                    $('#editPercentageIncrease').val(product.percentage_increase);
-                    $('#editSalePrice').val(product.sale_price);
-                    $('#editQuantity').val(product.quantity);
-                    $('#editExpirationDate').val(product.expiration_date);
-                    $('#editProductModal').modal('show');
-                })
-                .catch(error => {
-                    console.error('Error al obtener el producto para editar:', error);
-                });
+
+            $("#editProductModal").modal("show");
+          }
         });
-        
-        // Cálculo automático del precio de venta en el modal de edición
-        document.getElementById('editProductForm').addEventListener('input', function(e) {
-            if (e.target.id === 'editPurchasePrice' || e.target.id === 'editPercentageIncrease') {
-                const purchase_price = parseFloat(document.getElementById('editPurchasePrice').value) || 0;
-                const percentage_increase = parseFloat(document.getElementById('editPercentageIncrease').value) || 0;
-                const sale_price = purchase_price * (1 + percentage_increase / 100);
-                document.getElementById('editSalePrice').value = sale_price.toFixed(2);
-            }
+
+      // Guardar cambios de producto editado
+      document
+        .getElementById("saveEditButton")
+        .addEventListener("click", function () {
+          const formData = new FormData(
+            document.getElementById("editProductForm")
+          );
+          const productId = document.getElementById("editProductId").value;
+
+          fetch(`/products/${productId}`, {
+            method: "PUT",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              $("#modalMessage").text(data.message);
+              $("#successModal").modal("show");
+              $("#editProductModal").modal("hide");
+              loadProducts(); // Cargar productos después de editar uno
+            })
+            .catch((error) => console.error("Error:", error));
         });
-        
-        // Guardar cambios en el producto editado
-        $('#saveEditButton').on('click', function() {
-            const formData = $('#editProductForm').serialize();
-            const productId = $('#editProductId').val();
-        
+
+      // Eliminar producto
+      document
+        .querySelector("#productTable")
+        .addEventListener("click", function (e) {
+          if (e.target.classList.contains("delete-btn")) {
+            const productId = e.target.dataset.id;
+
             fetch(`/products/${productId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: formData
+              method: "DELETE",
             })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Producto editado:', data);
-                $('#editProductModal').modal('hide');
-                $('#successModal').modal('show');
-                document.getElementById('modalMessage').textContent = 'Producto editado exitosamente';
-                loadProducts();
-            })
-            .catch(error => {
-                console.error('Error al editar producto:', error);
-                $('#editProductModal').modal('hide');
-                $('#successModal').modal('show');
-                document.getElementById('modalMessage').textContent = 'Error al editar producto';
-            });
+              .then((response) => response.json())
+              .then((data) => {
+                $("#modalMessage").text(data.message);
+                $("#successModal").modal("show");
+                loadProducts(); // Cargar productos después de eliminar uno
+              })
+              .catch((error) => console.error("Error:", error));
+          }
         });
-        
-        // Eliminar producto
-        $('#productTable').on('click', '.deleteBtn', function() {
-            const productId = $(this).data('id');
-            if (confirm(`¿Seguro que quieres eliminar el producto ${productId}?`)) {
-                fetch(`/products/${productId}`, {
-                    method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Producto eliminado:', data);
-                    $('#successModal').modal('show');
-                    document.getElementById('modalMessage').textContent = 'Producto eliminado exitosamente';
-                    loadProducts();
-                })
-                .catch(error => {
-                    console.error('Error al eliminar producto:', error);
-                    $('#successModal').modal('show');
-                    document.getElementById('modalMessage').textContent = 'Error al eliminar producto';
-                });
-            }
-        });
-        
-        // Cargar productos al iniciar la página
-        document.addEventListener('DOMContentLoaded', loadProducts);
+
+    // Aplicar filtros al cambiar la cantidad mínima
+document.getElementById("quantityFilter").addEventListener("input", function () {
+  const quantityFilter = document.getElementById("quantityFilter").value;
+  const expirationFilter = document.getElementById("expirationFilter").value;
+  const tbody = document.querySelector("#productTable tbody");
+  tbody.innerHTML = "";
+
+  let filteredProducts = allProducts;
+
+  if (quantityFilter) {
+    filteredProducts = filteredProducts.filter(
+      (product) => product.quantity <= parseInt(quantityFilter)
+    );
+  }
+
+  if (expirationFilter) {
+    filteredProducts = filteredProducts.filter(
+      (product) => new Date(product.expiration_date) <= new Date(expirationFilter)
+    );
+  }
+
+  filteredProducts.forEach((product) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${product.id}</td>
+      <td>${product.barcode}</td>
+      <td>${product.name}</td>
+      <td>${product.brand}</td>
+      <td>${product.purchase_price}</td>
+      <td>${product.percentage_increase}</td>
+      <td>${product.sale_price}</td>
+      <td>${product.quantity}</td>
+      <td>${product.category}</td>
+      <td>${product.category_en}</td>
+      <td>${product.expiration_date}</td>
+      <td><img src="${
+        product.image_filename
+          ? "/uploads/" + product.image_filename
+          : "No disponible"
+      }" alt="Imagen de ${product.name}" style="width: 50px; height: auto;"></td>
+      <td>
+          <button class="btn btn-warning btn-sm edit-btn" data-id="${
+            product.id
+          }">Editar</button>
+          <button class="btn btn-danger btn-sm delete-btn" data-id="${
+            product.id
+          }">Eliminar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+});
+
+// Aplicar filtros al hacer clic en el botón "Aplicar Filtros"
+document.getElementById("applyFilters").addEventListener("click", function () {
+  const quantityFilter = document.getElementById("quantityFilter").value;
+  const expirationFilter = document.getElementById("expirationFilter").value;
+  const tbody = document.querySelector("#productTable tbody");
+  tbody.innerHTML = "";
+
+  let filteredProducts = allProducts;
+
+  if (quantityFilter) {
+    filteredProducts = filteredProducts.filter(
+      (product) => product.quantity <= parseInt(quantityFilter)
+    );
+  }
+
+  if (expirationFilter) {
+    filteredProducts = filteredProducts.filter(
+      (product) => new Date(product.expiration_date) <= new Date(expirationFilter)
+    );
+  }
+
+  filteredProducts.forEach((product) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${product.id}</td>
+      <td>${product.barcode}</td>
+      <td>${product.name}</td>
+      <td>${product.brand}</td>
+      <td>${product.purchase_price}</td>
+      <td>${product.percentage_increase}</td>
+      <td>${product.sale_price}</td>
+      <td>${product.quantity}</td>
+      <td>${product.category}</td>
+      <td>${product.category_en}</td>
+      <td>${product.expiration_date}</td>
+      <td><img src="${
+        product.image_filename
+          ? "/uploads/" + product.image_filename
+          : "No disponible"
+      }" alt="Imagen de ${product.name}" style="width: 50px; height: auto;"></td>
+      <td>
+          <button class="btn btn-warning btn-sm edit-btn" data-id="${
+            product.id
+          }">Editar</button>
+          <button class="btn btn-danger btn-sm delete-btn" data-id="${
+            product.id
+          }">Eliminar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+});
+
     </script>
-</body>
+  </body>
 </html>

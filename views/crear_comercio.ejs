@@ -110,7 +110,7 @@
             // Verificar si es una edición o una creación
             if (data.id) {
                 // Editar comercio existente
-                fetch(`/update-commerce/${data.id}`, {
+                fetch(`/commerce/update-commerce/${data.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -128,7 +128,7 @@
                 });
             } else {
                 // Crear nuevo comercio
-                fetch('/create-commerce', {
+                fetch('/commerce/create-commerce', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -148,7 +148,7 @@
         });
 
         function loadCommerceData() {
-            fetch('/get-commerce-data')
+            fetch('/commerce/get-commerce-data')
                 .then(response => response.json())
                 .then(data => {
                     const tableBody = document.querySelector('#commerceTable tbody');
@@ -174,7 +174,7 @@
         }
 
         function editCommerce(id) {
-            fetch(`/get-commerce-data/${id}`)
+            fetch(`/commerce/get-commerce-data/${id}`)
                 .then(response => response.json())
                 .then(commerce => {
                     document.getElementById('name').value = commerce.name;
@@ -199,8 +199,9 @@
         }
 
         function deleteCommerce(id) {
-            fetch(`/delete-commerce/${id}`, {
+            fetch(`/commerce/delete-commerce/${id}`, {
                 method: 'DELETE'
+
             })
             .then(response => response.json())
             .then(data => {
