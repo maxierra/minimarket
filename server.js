@@ -328,7 +328,7 @@ app.get("/products/:id", (req, res) => {
 app.get("/products/:id/basic-info", (req, res) => {
   const { id } = req.params;
   db.get(
-    `SELECT name, sale_price FROM products WHERE id = ?`,
+    `SELECT name, sale_price, barcode FROM products WHERE id = ?`,
     [id],
     (err, row) => {
       if (err) {
@@ -338,6 +338,7 @@ app.get("/products/:id/basic-info", (req, res) => {
     }
   );
 });
+
 
 
 app.delete("/products/:id", (req, res) => {
