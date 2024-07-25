@@ -13,17 +13,26 @@
     }
     .card-custom .card-title {
       color: #007bff; /* Texto azul para el título */
+      font-size: 1.35rem; /* Tamaño de texto para nombre del producto (equivalente a h1) */
+      font-weight: bold; /* Texto en negrita */
     }
+    
     .card-custom .card-text {
-      font-size: 1.5em; /* Texto más grande */
+      font-size: 1.25rem; /* Tamaño de texto para precio de venta (equivalente a h2) */
       font-weight: bold; /* Texto en negrita */
       color: #000; /* Color negro */
     }
+    .card-custom .card-barcode {
+      font-size: 1rem; /* Tamaño de texto para código de barras (equivalente a h3) */
+      font-weight: normal; /* Texto normal */
+      color: #000; /* Color negro */
+    }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
 </head>
 <body>
-     <!-- Navbar -->
-     <%- include('navbar') %>
+  <!-- Navbar -->
+  <%- include('navbar') %>
   <div class="container mt-5">
     <h1 class="text-center">Generador de Precios</h1>
     <div class="form-group">
@@ -47,8 +56,12 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <div class="modal-body" id="productCards">
-          <!-- Las cards generadas se insertarán aquí -->
+        <div class="modal-body">
+          <div class="container">
+            <div class="row" id="productCards">
+              <!-- Las cards generadas se insertarán aquí -->
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
@@ -84,6 +97,9 @@
         productCardsContainer.innerHTML = ''; // Limpiar las cards anteriores
 
         for (let i = 0; i < quantity; i++) {
+          const col = document.createElement('div');
+          col.className = 'col-md-6'; // Cada tarjeta ocupa 6 columnas de un contenedor de 12 (2 tarjetas por fila)
+
           const card = document.createElement('div');
           card.className = 'card mt-3 card-custom';
 
@@ -98,11 +114,20 @@
           cardText.className = 'card-text';
           cardText.innerHTML = `Precio de Venta: $<span>${product.sale_price}</span>`;
 
+          const cardBarcode = document.createElement('div');
+          cardBarcode.className = 'card-barcode';
+          cardBarcode.innerHTML = `Código de Barras:<br><svg class="barcode" jsbarcode-format="CODE128" jsbarcode-value="${product.barcode}" jsbarcode-textmargin="0" jsbarcode-height="60"></svg>`;
+
           cardBody.appendChild(cardTitle);
           cardBody.appendChild(cardText);
+          cardBody.appendChild(cardBarcode);
           card.appendChild(cardBody);
-          productCardsContainer.appendChild(card);
+          col.appendChild(card);
+          productCardsContainer.appendChild(col);
         }
+
+        // Renderizar los códigos de barras
+        JsBarcode(".barcode").init();
 
         $('#productModal').modal('show'); // Mostrar el modal con las cards
 
